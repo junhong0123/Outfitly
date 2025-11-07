@@ -1,0 +1,154 @@
+﻿<!-- _Layout.cshtml -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Outfitly</title>
+    <!-- 在 </body> 前添加 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Outfitly.styles.css" asp-append-version="true" />
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Navigation Bar -->
+    <header class="bg-white border-b border-gray-200 fixed w-full top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 w-full">
+                <!-- Left: Logo + Navigation Links -->
+                <div class="flex items-center space-x-8">
+                    <!-- Logo -->
+                    <a class="text-2xl font-light tracking-widest text-black hover:text-gray-700 transition flex-shrink-0"
+                       asp-area="" asp-controller="Home" asp-action="Index">
+                        OUTFITLY
+                    </a>
+
+                    <!-- Navigation Links (Desktop) - Right next to logo -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a class="text-sm text-gray-700 hover:text-black transition"
+                           asp-area="" asp-controller="Products" asp-action="Index">Shop</a>
+                        <a class="text-sm text-gray-700 hover:text-black transition"
+                           asp-area="" asp-controller="Home" asp-action="About">About</a>
+                        <button id="aiChatBtn" class="text-sm text-gray-700 hover:text-black transition">AI Assistant</button>
+                    </div>
+                </div>
+
+                <!-- Right: Cart + Login -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a asp-area="" asp-controller="Cart" asp-action="Index"
+                       class="text-gray-700 hover:text-black transition relative inline-block">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <span class="absolute -top-1 -right-1 bg-black text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-medium">0</span>
+                    </a>
+                    <partial name="_LoginPartial" />
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-black">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-200 mt-2">
+                <a class="block py-3 text-sm text-gray-700 hover:text-black transition"
+                   asp-area="" asp-controller="Products" asp-action="Index">Shop</a>
+                <a class="block py-3 text-sm text-gray-700 hover:text-black transition"
+                   asp-area="" asp-controller="Home" asp-action="About">About</a>
+                <button id="aiChatBtnMobile" class="block py-3 text-sm text-gray-700 hover:text-black transition text-left w-full">
+                    AI Assistant
+                </button>
+                <a class="block py-3 text-sm text-gray-700 hover:text-black transition"
+                   asp-area="" asp-controller="Cart" asp-action="Index">Cart</a>
+                <div class="py-3 border-t border-gray-200 mt-2">
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Area with padding-top for fixed header -->
+    <div class="flex-grow pt-16">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xs tracking-widest text-black mb-4">ABOUT</h3>
+                    <p class="text-xs text-gray-600 leading-relaxed">
+                        Outfitly brings you curated fashion with AI-powered recommendations for your unique style.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xs tracking-widest text-black mb-4">CUSTOMER CARE</h3>
+                    <ul class="space-y-2 text-xs text-gray-600">
+                        <li><a href="#" class="hover:text-black transition">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-black transition">Shipping Info</a></li>
+                        <li><a href="#" class="hover:text-black transition">Returns</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs tracking-widest text-black mb-4">CONNECT</h3>
+                    <ul class="space-y-2 text-xs text-gray-600">
+                        <li><a href="#" class="hover:text-black transition">Instagram</a></li>
+                        <li><a href="#" class="hover:text-black transition">Facebook</a></li>
+                        <li><a href="#" class="hover:text-black transition">Twitter</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-12 pt-8 border-t border-gray-200 text-center">
+                <p class="text-xs text-gray-500">
+                    &copy; 2025 Outfitly. All rights reserved. -
+                    <a class="hover:text-black transition" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Chat Floating Button -->
+    <button id="aiFloatingBtn" class="fixed bottom-8 right-8 w-14 h-14 bg-amber-100 hover:bg-amber-200 rounded-full shadow-lg flex items-center justify-center transition z-50">
+        <svg class="w-6 h-6 text-amber-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+    </button>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Mobile Menu & AI Chat Toggle Script -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // AI Chat functionality (placeholder)
+        function openAIChat() {
+            alert('AI Chat Assistant will open here');
+            // TODO: Implement AI chat modal
+        }
+
+        document.getElementById('aiFloatingBtn')?.addEventListener('click', openAIChat);
+        document.getElementById('aiChatBtn')?.addEventListener('click', openAIChat);
+        document.getElementById('aiChatBtnMobile')?.addEventListener('click', function() {
+            openAIChat();
+            document.getElementById('mobile-menu').classList.add('hidden');
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> 

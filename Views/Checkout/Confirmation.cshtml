@@ -1,0 +1,175 @@
+﻿@model OrderConfirmation
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<!-- Success Message -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <!-- Success Icon -->
+        <div class="mb-6">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-light text-black mb-3">Order Confirmed!</h1>
+        <p class="text-gray-600 text-sm mb-6">Thank you for your purchase. Your order has been received.</p>
+
+        <div class="inline-block bg-gray-50 border border-gray-200 rounded px-6 py-3">
+            <p class="text-xs text-gray-600 mb-1">ORDER NUMBER</p>
+            <p class="text-xl font-light text-black">#@Model.OrderId</p>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Order Information Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+        <!-- Order Date -->
+        <div class="bg-white border border-gray-200 rounded p-6 text-center">
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="text-xs text-gray-600 mb-1">ORDER DATE</p>
+            <p class="text-sm text-black font-medium">@Model.OrderDate.ToString("MMM dd, yyyy")</p>
+        </div>
+
+        <!-- Total Amount -->
+        <div class="bg-white border border-gray-200 rounded p-6 text-center">
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-xs text-gray-600 mb-1">TOTAL AMOUNT</p>
+            <p class="text-sm text-black font-medium">$@Model.TotalAmount.ToString("F2")</p>
+        </div>
+
+        <!-- Estimated Delivery -->
+        <div class="bg-white border border-gray-200 rounded p-6 text-center">
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+            <p class="text-xs text-gray-600 mb-1">ESTIMATED DELIVERY</p>
+            <p class="text-sm text-black font-medium">@Model.EstimatedDelivery.ToString("MMM dd, yyyy")</p>
+        </div>
+    </div>
+
+    <!-- Email Confirmation Notice -->
+    <div class="bg-amber-50 border border-amber-200 rounded p-6 mb-12">
+        <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <div>
+                <p class="text-sm text-amber-900 font-medium mb-1">Order confirmation sent</p>
+                <p class="text-sm text-amber-800">We've sent a confirmation email with your order details and tracking information.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary Section -->
+    <div class="bg-white border border-gray-200 rounded p-6 md:p-8 mb-8">
+        <h2 class="text-xl font-light text-black mb-6">Order Summary</h2>
+
+        <!-- Order Items -->
+        <div class="space-y-4 mb-6 pb-6 border-b border-gray-200">
+            <div class="flex gap-4">
+                <div class="w-20 h-20 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
+                    <span class="text-gray-400 text-xs">Image</span>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-sm font-medium text-black mb-1">Minimal Cotton Tee</h3>
+                    <p class="text-xs text-gray-600 mb-2">Color: Black | Size: M</p>
+                    <p class="text-xs text-gray-600">Quantity: 1</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-medium text-black">$49.00</p>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <div class="w-20 h-20 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
+                    <span class="text-gray-400 text-xs">Image</span>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-sm font-medium text-black mb-1">Tailored Linen Pants</h3>
+                    <p class="text-xs text-gray-600 mb-2">Color: Blue | Size: L</p>
+                    <p class="text-xs text-gray-600">Quantity: 2</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-medium text-black">$178.00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="space-y-2 mb-6 pb-6 border-b border-gray-200">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Subtotal</span>
+                <span class="text-black">$356.00</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Shipping</span>
+                <span class="text-black">$10.00</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Tax</span>
+                <span class="text-black">$35.60</span>
+            </div>
+        </div>
+
+        <!-- Total -->
+        <div class="flex justify-between items-center">
+            <span class="text-base font-medium text-black">Total</span>
+            <span class="text-2xl font-light text-black">$@Model.TotalAmount.ToString("F2")</span>
+        </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="bg-white border border-gray-200 rounded p-6 md:p-8 mb-8">
+        <h2 class="text-xl font-light text-black mb-4">Shipping Address</h2>
+        <p class="text-sm text-gray-700 leading-relaxed">
+            John Doe<br>
+            123 Main Street<br>
+            Apartment 4B<br>
+            New York, NY 10001<br>
+            United States<br>
+            Phone: +1 (555) 123-4567
+        </p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4">
+        <a asp-area="" asp-controller="Products" asp-action="Index"
+           class="flex-1 text-center border border-gray-300 text-black py-3 text-sm tracking-wide hover:bg-gray-50 transition rounded">
+            CONTINUE SHOPPING
+        </a>
+        <a asp-area="" asp-controller="Account" asp-action="Orders"
+           class="flex-1 text-center bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
+            VIEW ORDER HISTORY
+        </a>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-12 text-center">
+        <p class="text-sm text-gray-600 mb-2">Need help with your order?</p>
+        <a href="#" class="text-sm text-black hover:underline">Contact Customer Support</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Print order functionality
+        function printOrder() {
+            window.print();
+        }
+
+        // Add print button if needed
+        console.log('Order confirmation page loaded');
+    </script>
+}

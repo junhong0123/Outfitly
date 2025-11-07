@@ -1,0 +1,405 @@
+﻿@{
+    ViewData["Title"] = "Checkout";
+}
+
+<!-- Page Header -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 class="text-3xl md:text-4xl font-light text-black mb-6">Checkout</h1>
+
+        <!-- Progress Steps -->
+        <div class="flex items-center justify-center gap-4">
+            <div class="flex items-center">
+                <div class="step-indicator active flex items-center justify-center w-8 h-8 rounded-full bg-black text-white text-sm font-medium">1</div>
+                <span class="ml-2 text-sm font-medium text-black hidden sm:inline">Shipping</span>
+            </div>
+            <div class="w-12 h-0.5 bg-gray-300"></div>
+            <div class="flex items-center">
+                <div class="step-indicator flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-500 text-sm font-medium">2</div>
+                <span class="ml-2 text-sm text-gray-500 hidden sm:inline">Payment</span>
+            </div>
+            <div class="w-12 h-0.5 bg-gray-300"></div>
+            <div class="flex items-center">
+                <div class="step-indicator flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-500 text-sm font-medium">3</div>
+                <span class="ml-2 text-sm text-gray-500 hidden sm:inline">Review</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Content -->
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Left: Checkout Form -->
+        <div class="lg:col-span-2">
+
+            <!-- Step 1: Shipping Address -->
+            <div id="step1" class="checkout-step bg-white border border-gray-200 rounded p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-medium text-black">Shipping Address</h2>
+                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 1</span>
+                </div>
+
+                <form class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">FIRST NAME *</label>
+                            <input type="text" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">LAST NAME *</label>
+                            <input type="text" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">EMAIL *</label>
+                        <input type="email" required
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">PHONE NUMBER *</label>
+                        <input type="tel" required
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 1 *</label>
+                        <input type="text" required
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 2</label>
+                        <input type="text"
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">CITY *</label>
+                            <input type="text" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">STATE/PROVINCE *</label>
+                            <input type="text" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">ZIP/POSTAL CODE *</label>
+                            <input type="text" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">COUNTRY *</label>
+                            <select required
+                                    class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                                <option value="">Select Country</option>
+                                <option value="US">United States</option>
+                                <option value="MY">Malaysia</option>
+                                <option value="SG">Singapore</option>
+                                <option value="GB">United Kingdom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" id="continueToPayment"
+                            class="w-full bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded mt-6">
+                        CONTINUE TO PAYMENT
+                    </button>
+                </form>
+            </div>
+
+            <!-- Step 2: Payment Method -->
+            <div id="step2" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-medium text-black">Payment Method</h2>
+                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 2</span>
+                </div>
+
+                <!-- Payment Options -->
+                <div class="space-y-4 mb-6">
+                    <label class="flex items-center p-4 border-2 border-black rounded cursor-pointer bg-gray-50">
+                        <input type="radio" name="payment" value="card" checked class="w-4 h-4 text-black">
+                        <span class="ml-3 text-sm font-medium text-black">Credit/Debit Card</span>
+                        <div class="ml-auto flex gap-2">
+                            <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">V</div>
+                            <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">M</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
+                        <input type="radio" name="payment" value="paypal" class="w-4 h-4 text-black">
+                        <span class="ml-3 text-sm text-gray-700">PayPal</span>
+                    </label>
+
+                    <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
+                        <input type="radio" name="payment" value="bank" class="w-4 h-4 text-black">
+                        <span class="ml-3 text-sm text-gray-700">Bank Transfer</span>
+                    </label>
+                </div>
+
+                <!-- Card Details Form -->
+                <div id="cardDetails" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">CARD NUMBER *</label>
+                        <input type="text" placeholder="1234 5678 9012 3456"
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-2">CARDHOLDER NAME *</label>
+                        <input type="text"
+                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">EXPIRY DATE *</label>
+                            <input type="text" placeholder="MM/YY"
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">CVV *</label>
+                            <input type="text" placeholder="123"
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="backToShipping"
+                            class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
+                        BACK
+                    </button>
+                    <button type="button" id="continueToReview"
+                            class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
+                        CONTINUE TO REVIEW
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Review Order -->
+            <div id="step3" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-medium text-black">Review Your Order</h2>
+                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 3</span>
+                </div>
+
+                <!-- Shipping Address Review -->
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-medium text-black tracking-wide">SHIPPING ADDRESS</h3>
+                        <button class="text-xs text-gray-600 hover:text-black underline">Edit</button>
+                    </div>
+                    <p class="text-sm text-gray-700">
+                        John Doe<br>
+                        123 Main Street<br>
+                        New York, NY 10001<br>
+                        United States
+                    </p>
+                </div>
+
+                <!-- Payment Method Review -->
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-medium text-black tracking-wide">PAYMENT METHOD</h3>
+                        <button class="text-xs text-gray-600 hover:text-black underline">Edit</button>
+                    </div>
+                    <p class="text-sm text-gray-700">Credit Card ending in 3456</p>
+                </div>
+
+                <!-- Order Items -->
+                <div class="mb-6">
+                    <h3 class="text-xs font-medium text-black tracking-wide mb-4">ORDER ITEMS</h3>
+                    <div class="space-y-3">
+                        <div class="flex gap-3">
+                            <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="text-sm text-black">Minimal Cotton Tee</p>
+                                <p class="text-xs text-gray-600">Black / M / Qty: 1</p>
+                            </div>
+                            <p class="text-sm text-black">$49.00</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0"></div>
+                            <div class="flex-grow">
+                                <p class="text-sm text-black">Tailored Linen Pants</p>
+                                <p class="text-xs text-gray-600">Blue / L / Qty: 2</p>
+                            </div>
+                            <p class="text-sm text-black">$178.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" id="backToPayment"
+                            class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
+                        BACK
+                    </button>
+                    <button type="button" id="placeOrder"
+                            class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
+                        PLACE ORDER
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Order Summary (Sticky) -->
+        <div class="lg:col-span-1">
+            <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
+                <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
+
+                <!-- Summary Details -->
+                <div class="space-y-3 mb-6 pb-6 border-b border-gray-200">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span class="text-black font-medium">$356.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Shipping</span>
+                        <span class="text-black font-medium">$10.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Tax</span>
+                        <span class="text-black font-medium">$35.60</span>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-base font-medium text-black">Total</span>
+                    <span class="text-2xl font-light text-black">$401.60</span>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <div>
+                            <p class="text-xs font-medium text-black mb-1">Secure Checkout</p>
+                            <p class="text-xs text-gray-600">Your payment information is encrypted and secure.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Step navigation
+        const steps = {
+            1: document.getElementById('step1'),
+            2: document.getElementById('step2'),
+            3: document.getElementById('step3')
+        };
+
+        const stepIndicators = document.querySelectorAll('.step-indicator');
+        let currentStep = 1;
+
+        function showStep(stepNumber) {
+            // Hide all steps
+            Object.values(steps).forEach(step => step.classList.add('hidden'));
+
+            // Show current step
+            steps[stepNumber].classList.remove('hidden');
+
+            // Update step indicators
+            stepIndicators.forEach((indicator, index) => {
+                const stepNum = index + 1;
+                if (stepNum < stepNumber) {
+                    // Completed steps
+                    indicator.classList.add('bg-black', 'text-white');
+                    indicator.classList.remove('bg-gray-200', 'text-gray-500');
+                } else if (stepNum === stepNumber) {
+                    // Current step
+                    indicator.classList.add('bg-black', 'text-white');
+                    indicator.classList.remove('bg-gray-200', 'text-gray-500');
+                    indicator.nextElementSibling?.classList.remove('text-gray-500');
+                    indicator.nextElementSibling?.classList.add('text-black', 'font-medium');
+                } else {
+                    // Future steps
+                    indicator.classList.remove('bg-black', 'text-white');
+                    indicator.classList.add('bg-gray-200', 'text-gray-500');
+                    indicator.nextElementSibling?.classList.add('text-gray-500');
+                    indicator.nextElementSibling?.classList.remove('text-black', 'font-medium');
+                }
+            });
+
+            currentStep = stepNumber;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Step 1 -> Step 2
+        document.getElementById('continueToPayment').addEventListener('click', function() {
+            // Validate form fields
+            const form = document.querySelector('#step1 form');
+            if (form.checkValidity()) {
+                showStep(2);
+            } else {
+                form.reportValidity();
+            }
+        });
+
+        // Step 2 -> Step 1
+        document.getElementById('backToShipping').addEventListener('click', function() {
+            showStep(1);
+        });
+
+        // Step 2 -> Step 3
+        document.getElementById('continueToReview').addEventListener('click', function() {
+            showStep(3);
+        });
+
+        // Step 3 -> Step 2
+        document.getElementById('backToPayment').addEventListener('click', function() {
+            showStep(2);
+        });
+
+        // Place Order
+        document.getElementById('placeOrder').addEventListener('click', function() {
+            if (confirm('Confirm your order?')) {
+                alert('Order placed successfully! (This is a simulated order)');
+                // TODO: Submit order to backend
+                // window.location.href = '/Order/Confirmation';
+            }
+        });
+
+        // Payment method selection
+        document.querySelectorAll('input[name="payment"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Update border styling
+                document.querySelectorAll('label').forEach(label => {
+                    if (label.querySelector('input[name="payment"]')) {
+                        label.classList.remove('border-black', 'bg-gray-50');
+                        label.classList.add('border-gray-300');
+                    }
+                });
+
+                this.closest('label').classList.add('border-black', 'bg-gray-50');
+                this.closest('label').classList.remove('border-gray-300');
+
+                // Show/hide card details
+                const cardDetails = document.getElementById('cardDetails');
+                if (this.value === 'card') {
+                    cardDetails.classList.remove('hidden');
+                } else {
+                    cardDetails.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+}

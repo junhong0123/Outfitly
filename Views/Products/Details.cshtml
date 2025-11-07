@@ -1,0 +1,383 @@
+﻿@using Outfitly.Models
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<!-- Breadcrumb -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav class="flex text-sm text-gray-600">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="hover:text-black">Home</a>
+            <span class="mx-2">/</span>
+            <a asp-area="" asp-controller="Products" asp-action="Index" class="hover:text-black">Shop</a>
+            <span class="mx-2">/</span>
+            <span class="text-black">@Model.Name</span>
+        </nav>
+    </div>
+</div>
+
+<!-- Product Detail Section -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+
+        <!-- Left: Image Gallery with Navigation -->
+        <div class="relative">
+            <!-- Main Image Container -->
+            <div class="relative bg-gray-100 aspect-square flex items-center justify-center rounded overflow-hidden group">
+                <!-- Image Slides -->
+                <div class="image-slide active absolute inset-0 flex items-center justify-center transition-opacity duration-500">
+                    <span class="text-gray-400 text-sm">Product Image 1</span>
+                </div>
+                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                    <span class="text-gray-400 text-sm">Product Image 2</span>
+                </div>
+                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                    <span class="text-gray-400 text-sm">Product Image 3</span>
+                </div>
+                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                    <span class="text-gray-400 text-sm">Product Image 4</span>
+                </div>
+
+                <!-- Navigation Arrows -->
+                <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
+                    <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
+                    <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <!-- Image Counter -->
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
+                    <span id="currentImageIndex">1</span> / 4
+                </div>
+            </div>
+
+            <!-- Thumbnail Dots -->
+            <div class="flex justify-center gap-2 mt-4">
+                <button class="dot-indicator w-2 h-2 rounded-full bg-black" data-index="0"></button>
+                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="1"></button>
+                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="2"></button>
+                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="3"></button>
+            </div>
+        </div>
+
+        <!-- Right: Product Information -->
+        <div class="space-y-6">
+            <!-- Product Title & Price -->
+            <div>
+                <h1 class="text-3xl md:text-4xl font-light text-black mb-3">@Model.Name</h1>
+                <p class="text-2xl text-black font-light">$@Model.Price.ToString("F2")</p>
+            </div>
+
+            <!-- Product Description -->
+            <div class="border-t border-gray-200 pt-6">
+                <p class="text-sm text-gray-700 leading-relaxed">
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        @Model.Description
+                    }
+                    else
+                    {
+                        <text>Premium quality garment crafted with attention to detail. Perfect for everyday wear with a sophisticated touch. Made from sustainable materials for lasting comfort and style.</text>
+                    }
+                </p>
+            </div>
+
+            <!-- Color Selection -->
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-xs font-medium text-black mb-3 tracking-wide">COLOR</h3>
+                <div class="flex gap-3">
+                    @foreach (var color in Model.AvailableColors)
+                    {
+                        <button class="color-option w-10 h-10 rounded-full border-2 border-gray-300 hover:border-black transition @(color == "black" ? "bg-black ring-2 ring-black ring-offset-2" : color == "white" ? "bg-white" : color == "gray" ? "bg-gray-500" : color == "blue" ? "bg-blue-600" : color == "navy" ? "bg-blue-900" : color == "beige" ? "bg-amber-100" : color == "cream" ? "bg-amber-50" : color == "brown" ? "bg-yellow-700" : color == "pink" ? "bg-pink-200" : "bg-gray-400")"
+                                data-color="@color"
+                                title="@color">
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Size Selection -->
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-xs font-medium text-black tracking-wide">SIZE</h3>
+                    <button class="text-xs text-gray-600 hover:text-black underline">Size Guide</button>
+                </div>
+                <div class="grid grid-cols-5 gap-2">
+                    @foreach (var size in Model.AvailableSizes)
+                    {
+                        <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">
+                            @size
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Quantity & Stock Status -->
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xs font-medium text-black mb-2 tracking-wide">QUANTITY</h3>
+                        <div class="flex items-center border border-gray-300 w-32">
+                            <button id="decreaseQty" class="px-4 py-2 hover:bg-gray-100 transition">-</button>
+                            <input type="number" id="quantity" value="1" min="1" class="w-full text-center border-x border-gray-300 py-2 focus:outline-none">
+                            <button id="increaseQty" class="px-4 py-2 hover:bg-gray-100 transition">+</button>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-600 mb-1">AVAILABILITY</p>
+                        <p class="text-sm text-green-600 font-medium">In Stock</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <div class="border-t border-gray-200 pt-6">
+                <button id="addToCartBtn" class="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-800 transition mb-3">
+                    ADD TO CART
+                </button>
+                <button class="w-full border border-gray-300 text-black py-4 text-sm tracking-wide hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span>ADD TO WISHLIST</span>
+                </button>
+            </div>
+
+            <!-- Product Details Accordion -->
+            <div class="border-t border-gray-200 pt-6 space-y-4">
+                <details class="group">
+                    <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
+                        <span>PRODUCT DETAILS</span>
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </summary>
+                    <div class="mt-3 text-sm text-gray-600 leading-relaxed">
+                        <ul class="space-y-2">
+                            <li>• Premium quality fabric</li>
+                            <li>• Regular fit</li>
+                            <li>• Machine washable</li>
+                            <li>• Imported</li>
+                        </ul>
+                    </div>
+                </details>
+
+                <details class="group border-t border-gray-200 pt-4">
+                    <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
+                        <span>SHIPPING & RETURNS</span>
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </summary>
+                    <div class="mt-3 text-sm text-gray-600 leading-relaxed">
+                        <p>Free shipping on orders over $100. Returns accepted within 30 days of purchase.</p>
+                    </div>
+                </details>
+
+                <details class="group border-t border-gray-200 pt-4">
+                    <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
+                        <span>CARE INSTRUCTIONS</span>
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </summary>
+                    <div class="mt-3 text-sm text-gray-600 leading-relaxed">
+                        <p>Machine wash cold. Tumble dry low. Do not bleach. Iron on low heat if needed.</p>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Complete the Look Section -->
+<div class="bg-gray-50 py-16 md:py-20 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-3xl md:text-4xl font-light text-black mb-2">Complete the Look</h2>
+                <p class="text-sm text-gray-600">AI-powered styling recommendations</p>
+            </div>
+            <div class="flex items-center gap-2 text-amber-900 bg-amber-100 px-4 py-2 rounded">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span class="text-xs font-medium">AI SELECTED</span>
+            </div>
+        </div>
+
+        <!-- Horizontal Scroll Product Cards -->
+        <div class="overflow-x-auto -mx-4 px-4">
+            <div class="flex gap-6 pb-4">
+
+                <!-- Recommendation Card 1 -->
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
+                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
+                    <p class="text-xs text-gray-600">$89.00</p>
+                </a>
+
+                <!-- Recommendation Card 2 -->
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
+                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">Leather Crossbody Bag</h3>
+                    <p class="text-xs text-gray-600">$129.00</p>
+                </a>
+
+                <!-- Recommendation Card 3 -->
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="9"
+                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">Ankle Boots</h3>
+                    <p class="text-xs text-gray-600">$189.00</p>
+                </a>
+
+                <!-- Recommendation Card 4 -->
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="10"
+                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">Oversized Blazer</h3>
+                    <p class="text-xs text-gray-600">$199.00</p>
+                </a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Image gallery navigation
+        let currentImageIndex = 0;
+        const totalImages = 4;
+        const imageSlides = document.querySelectorAll('.image-slide');
+        const currentImageCounter = document.getElementById('currentImageIndex');
+        const dotIndicators = document.querySelectorAll('.dot-indicator');
+
+        function showImage(index) {
+            // Hide all images
+            imageSlides.forEach(slide => {
+                slide.classList.remove('active');
+                slide.classList.add('opacity-0');
+            });
+
+            // Show current image
+            imageSlides[index].classList.add('active');
+            imageSlides[index].classList.remove('opacity-0');
+
+            // Update counter
+            currentImageCounter.textContent = index + 1;
+
+            // Update dots
+            dotIndicators.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.remove('bg-gray-300');
+                    dot.classList.add('bg-black');
+                } else {
+                    dot.classList.remove('bg-black');
+                    dot.classList.add('bg-gray-300');
+                }
+            });
+        }
+
+        // Next image button
+        document.getElementById('nextImage').addEventListener('click', function() {
+            currentImageIndex = (currentImageIndex + 1) % totalImages;
+            showImage(currentImageIndex);
+        });
+
+        // Previous image button
+        document.getElementById('prevImage').addEventListener('click', function() {
+            currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
+            showImage(currentImageIndex);
+        });
+
+        // Dot indicators click
+        dotIndicators.forEach((dot, index) => {
+            dot.addEventListener('click', function() {
+                currentImageIndex = index;
+                showImage(currentImageIndex);
+            });
+        });
+
+        // Color selection
+        document.querySelectorAll('.color-option').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove selection from all colors
+                document.querySelectorAll('.color-option').forEach(b => {
+                    b.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
+                });
+                // Add selection to clicked color
+                this.classList.add('ring-2', 'ring-black', 'ring-offset-2');
+            });
+        });
+
+        // Size selection
+        document.querySelectorAll('.size-option').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove selection from all sizes
+                document.querySelectorAll('.size-option').forEach(b => {
+                    b.classList.remove('bg-black', 'text-white', 'border-black');
+                    b.classList.add('text-gray-700');
+                });
+                // Add selection to clicked size
+                this.classList.add('bg-black', 'text-white', 'border-black');
+                this.classList.remove('text-gray-700');
+            });
+        });
+
+        // Quantity controls
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decreaseQty');
+        const increaseBtn = document.getElementById('increaseQty');
+
+        decreaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            const currentValue = parseInt(quantityInput.value);
+            quantityInput.value = currentValue + 1;
+        });
+
+        // Add to cart
+        document.getElementById('addToCartBtn').addEventListener('click', function() {
+            const selectedColor = document.querySelector('.color-option.ring-2')?.dataset.color;
+            const selectedSize = document.querySelector('.size-option.bg-black')?.textContent.trim();
+            const quantity = quantityInput.value;
+
+            if (!selectedSize) {
+                alert('Please select a size');
+                return;
+            }
+
+            alert(`Added to cart:\nProduct: @Model.Name\nColor: ${selectedColor || 'Default'}\nSize: ${selectedSize}\nQuantity: ${quantity}`);
+
+            // TODO: Implement actual cart functionality
+            // Update cart counter in navigation
+        });
+    </script>
+}

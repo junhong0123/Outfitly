@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hero Section -->
+<section class="bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div class="space-y-6">
+                <h1 class="text-5xl md:text-6xl font-light text-black leading-tight">
+                    Elevate Your<br />
+                    <span class="font-normal">Style Journey</span>
+                </h1>
+                <p class="text-gray-600 text-sm max-w-md leading-relaxed">
+                    Discover curated fashion pieces powered by intelligent recommendations tailored just for you.
+                </p>
+                <a asp-area="" asp-controller="Products" asp-action="Index"
+                   class="inline-block bg-black text-white px-8 py-3 text-sm tracking-wide hover:bg-gray-800 transition">
+                    SHOP NOW
+                </a>
+            </div>
+            <div class="bg-gray-200 h-80 lg:h-[500px] flex items-center justify-center rounded">
+                <span class="text-gray-400 text-sm">Hero Image Placeholder</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Driven Selections -->
+<section class="py-16 md:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <h2 class="text-3xl md:text-4xl font-light text-black mb-2">AI Driven Selections</h2>
+                <p class="text-gray-500 text-xs">Personalized picks curated for you</p>
+            </div>
+            <a asp-area="" asp-controller="Products" asp-action="Recommendations"
+               class="text-xs text-gray-700 hover:text-black border-b border-gray-700 hidden sm:block">
+                View All
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            <!-- Product Card 1 -->
+            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="1"
+               class="group cursor-pointer">
+                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    <!-- Quick Add Button (Hover) -->
+                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                        Quick Add
+                    </button>
+                </div>
+                <h3 class="text-sm font-light text-black mb-1">Minimal Cotton Tee</h3>
+                <p class="text-xs text-gray-600">$49.00</p>
+            </a>
+
+            <!-- Product Card 2 -->
+            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
+               class="group cursor-pointer">
+                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                        Quick Add
+                    </button>
+                </div>
+                <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
+                <p class="text-xs text-gray-600">$89.00</p>
+            </a>
+
+            <!-- Product Card 3 -->
+            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
+               class="group cursor-pointer">
+                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                        Quick Add
+                    </button>
+                </div>
+                <h3 class="text-sm font-light text-black mb-1">Leather Crossbody</h3>
+                <p class="text-xs text-gray-600">$129.00</p>
+            </a>
+
+            <!-- Product Card 4 -->
+            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="4"
+               class="group cursor-pointer">
+                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                        Quick Add
+                    </button>
+                </div>
+                <h3 class="text-sm font-light text-black mb-1">Classic Wool Coat</h3>
+                <p class="text-xs text-gray-600">$249.00</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Category Display -->
+<section class="py-16 md:py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl md:text-4xl font-light text-black mb-12 text-center">Shop by Category</h2>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <!-- Category 1: Tops -->
+            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="tops"
+               class="group">
+                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
+                    <span class="text-gray-400 text-xs">Tops Category</span>
+                </div>
+                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">TOPS</h3>
+            </a>
+
+            <!-- Category 2: Bottoms -->
+            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="bottoms"
+               class="group">
+                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
+                    <span class="text-gray-400 text-xs">Bottoms Category</span>
+                </div>
+                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">BOTTOMS</h3>
+            </a>
+
+            <!-- Category 3: Outerwear -->
+            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="outerwear"
+               class="group">
+                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
+                    <span class="text-gray-400 text-xs">Outerwear Category</span>
+                </div>
+                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">OUTERWEAR</h3>
+            </a>
+
+            <!-- Category 4: Accessories -->
+            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="accessories"
+               class="group">
+                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
+                    <span class="text-gray-400 text-xs">Accessories Category</span>
+                </div>
+                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">ACCESSORIES</h3>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Banner -->
+<section class="py-16 md:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-black text-white py-16 px-8 md:px-16 text-center rounded">
+            <h2 class="text-3xl md:text-4xl font-light mb-4">Experience AI-Powered Styling</h2>
+            <p class="text-gray-300 text-sm mb-8 max-w-2xl mx-auto">
+                Let our intelligent assistant help you discover your perfect style. Get personalized recommendations based on your preferences.
+            </p>
+            <button onclick="openAIChat()"
+                    class="bg-white text-black px-8 py-3 text-sm tracking-wide hover:bg-gray-100 transition">
+                TRY AI ASSISTANT
+            </button>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Quick add to cart functionality (placeholder)
+        document.querySelectorAll('.group button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                alert('Product added to cart!');
+                // TODO: Implement actual cart functionality
+            });
+        });
+    </script>
+}

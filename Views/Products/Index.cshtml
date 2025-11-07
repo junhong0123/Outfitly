@@ -1,0 +1,345 @@
+﻿@using Outfitly.Models
+@model ProductListViewModel
+@{
+    ViewData["Title"] = "Shop";
+}
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Top Bar: Filter Button + Sort -->
+    <div class="flex justify-between items-center mb-8">
+        <button id="filterToggle" class="flex items-center gap-2 text-sm text-black border border-gray-300 px-5 py-2.5 hover:bg-gray-50 transition rounded">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span>Filters</span>
+            <span id="filterCount" class="hidden bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+        </button>
+
+        <div class="flex items-center gap-4">
+            <p class="text-sm text-gray-600 hidden sm:block">
+                <span class="font-medium text-black">124</span> products
+            </p>
+            <select id="sortSelect" class="text-sm border border-gray-300 rounded px-4 py-2.5 focus:outline-none focus:border-black bg-white">
+                <option value="featured">Featured</option>
+                <option value="newest">Newest</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="popular">Most Popular</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+
+        <!-- Product Card 1 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="1"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Minimal Cotton Tee</h3>
+            <p class="text-xs text-gray-600">$49.00</p>
+        </a>
+
+        <!-- Product Card 2 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
+            <p class="text-xs text-gray-600">$89.00</p>
+        </a>
+
+        <!-- Product Card 3 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Leather Crossbody Bag</h3>
+            <p class="text-xs text-gray-600">$129.00</p>
+        </a>
+
+        <!-- Product Card 4 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="4"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Classic Wool Coat</h3>
+            <p class="text-xs text-gray-600">$249.00</p>
+        </a>
+
+        <!-- Product Card 5 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="5"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Silk Blend Blouse</h3>
+            <p class="text-xs text-gray-600">$79.00</p>
+        </a>
+
+        <!-- Product Card 6 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="6"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Denim Jacket</h3>
+            <p class="text-xs text-gray-600">$119.00</p>
+        </a>
+
+        <!-- Product Card 7 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="7"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Wide Leg Trousers</h3>
+            <p class="text-xs text-gray-600">$95.00</p>
+        </a>
+
+        <!-- Product Card 8 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="8"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Cashmere Sweater</h3>
+            <p class="text-xs text-gray-600">$159.00</p>
+        </a>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-16 flex justify-center">
+        <nav class="flex items-center gap-2">
+            <button class="px-4 py-2 text-sm text-gray-400 cursor-not-allowed">
+                Previous
+            </button>
+            <button class="px-4 py-2 text-sm bg-black text-white">1</button>
+            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">2</button>
+            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">3</button>
+            <span class="px-4 py-2 text-sm text-gray-400">...</span>
+            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">10</button>
+            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black">
+                Next
+            </button>
+        </nav>
+    </div>
+</div>
+
+<!-- Filter Sidebar (Slide-in Panel) -->
+<div id="filterPanel" class="fixed inset-y-0 left-0 w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out z-50 overflow-y-auto">
+    <div class="p-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-black">Filters</h2>
+            <button id="closeFilter" class="text-gray-600 hover:text-black">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+            <h3 class="text-xs font-medium text-black mb-4 tracking-wide">CATEGORY</h3>
+            <div class="space-y-3">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="category" value="tops" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Tops</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="category" value="bottoms" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Bottoms</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="category" value="outerwear" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Outerwear</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="category" value="accessories" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Accessories</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+            <h3 class="text-xs font-medium text-black mb-4 tracking-wide">PRICE RANGE</h3>
+            <div class="space-y-4">
+                <div>
+                    <input type="range" min="0" max="500" value="250" id="priceRange"
+                           class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black">
+                    <div class="flex justify-between mt-3">
+                        <span class="text-xs text-gray-600">$0</span>
+                        <span class="text-sm text-black font-medium" id="priceValue">$250</span>
+                        <span class="text-xs text-gray-600">$500</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Size Filter -->
+        <div class="mb-8 pb-8 border-b border-gray-200">
+            <h3 class="text-xs font-medium text-black mb-4 tracking-wide">SIZE</h3>
+            <div class="space-y-3">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="size" value="xs" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">XS</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="size" value="s" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">S</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="size" value="m" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">M</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="size" value="l" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">L</span>
+                </label>
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="size" value="xl" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
+                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">XL</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Color Filter -->
+        <div class="mb-8">
+            <h3 class="text-xs font-medium text-black mb-4 tracking-wide">COLOR</h3>
+            <div class="flex flex-wrap gap-3">
+                <button class="w-10 h-10 rounded-full bg-black border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="black" title="Black"></button>
+                <button class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="white" title="White"></button>
+                <button class="w-10 h-10 rounded-full bg-gray-500 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="gray" title="Gray"></button>
+                <button class="w-10 h-10 rounded-full bg-blue-600 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="blue" title="Blue"></button>
+                <button class="w-10 h-10 rounded-full bg-red-600 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="red" title="Red"></button>
+                <button class="w-10 h-10 rounded-full bg-green-700 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="green" title="Green"></button>
+                <button class="w-10 h-10 rounded-full bg-yellow-600 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="yellow" title="Yellow"></button>
+                <button class="w-10 h-10 rounded-full bg-pink-400 border-2 border-gray-300 hover:border-black transition color-swatch"
+                        data-color="pink" title="Pink"></button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 pt-6 border-t border-gray-200">
+            <button id="clearAllFilters" class="flex-1 border border-gray-300 text-black px-4 py-3 text-sm hover:bg-gray-50 transition">
+                Clear All
+            </button>
+            <button id="applyFilters" class="flex-1 bg-black text-white px-4 py-3 text-sm hover:bg-gray-800 transition">
+                Apply Filters
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay (Background) -->
+<div id="filterOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"></div>
+
+@section Scripts {
+    <script>
+        const filterPanel = document.getElementById('filterPanel');
+        const filterOverlay = document.getElementById('filterOverlay');
+        const filterToggle = document.getElementById('filterToggle');
+        const closeFilter = document.getElementById('closeFilter');
+        const applyFilters = document.getElementById('applyFilters');
+        const filterCount = document.getElementById('filterCount');
+
+        // Open filter panel
+        filterToggle.addEventListener('click', function() {
+            filterPanel.classList.remove('-translate-x-full');
+            filterOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close filter panel
+        function closeFilterPanel() {
+            filterPanel.classList.add('-translate-x-full');
+            filterOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        closeFilter.addEventListener('click', closeFilterPanel);
+        filterOverlay.addEventListener('click', closeFilterPanel);
+        applyFilters.addEventListener('click', closeFilterPanel);
+
+        // Update filter count
+        function updateFilterCount() {
+            const checkedFilters = document.querySelectorAll('.filter-checkbox:checked').length;
+            const selectedColors = document.querySelectorAll('.color-swatch.ring-2').length;
+            const total = checkedFilters + selectedColors;
+
+            if (total > 0) {
+                filterCount.textContent = total;
+                filterCount.classList.remove('hidden');
+            } else {
+                filterCount.classList.add('hidden');
+            }
+        }
+
+        // Price range slider
+        const priceRange = document.getElementById('priceRange');
+        const priceValue = document.getElementById('priceValue');
+
+        priceRange.addEventListener('input', function() {
+            priceValue.textContent = '$' + this.value;
+        });
+
+        // Filter checkbox listeners
+        document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateFilterCount);
+        });
+
+        // Color selection
+        document.querySelectorAll('.color-swatch').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('ring-2');
+                this.classList.toggle('ring-black');
+                this.classList.toggle('ring-offset-2');
+                updateFilterCount();
+            });
+        });
+
+        // Clear all filters
+        document.getElementById('clearAllFilters').addEventListener('click', function() {
+            document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            document.querySelectorAll('.color-swatch').forEach(button => {
+                button.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
+            });
+            priceRange.value = 250;
+            priceValue.textContent = '$250';
+            updateFilterCount();
+        });
+
+        // Sort functionality
+        document.getElementById('sortSelect').addEventListener('change', function() {
+            console.log('Sort by:', this.value);
+            // TODO: Implement sorting logic
+        });
+    </script>
+}
