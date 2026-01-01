@@ -5,10 +5,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Outfitly</title>
-    <!-- 在 </body> 前添加 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Outfitly.styles.css" asp-append-version="true" />
 </head>
@@ -37,6 +33,13 @@
 
                 <!-- Right: Cart + Login -->
                 <div class="hidden md:flex items-center space-x-6">
+                    <a asp-area="" asp-controller="Account" asp-action="Dashboard"
+                       class="text-gray-700 hover:text-black transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </a>
                     <a asp-area="" asp-controller="Cart" asp-action="Index"
                        class="text-gray-700 hover:text-black transition relative inline-block">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,6 +128,13 @@
         </svg>
     </button>
 
+    <!-- jQuery (required for validation) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <!-- Mobile Menu & AI Chat Toggle Script -->
@@ -151,4 +161,4 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-</html> 
+</html>

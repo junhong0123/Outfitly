@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Outfitly.Models;
 
 namespace Outfitly.Data
 {
@@ -9,5 +10,7 @@ namespace Outfitly.Data
             : base(options)
         {
         }
+
+        public DbSet<CartItem> CartItems { get; set; } = default!;
     }
 }

@@ -128,4 +128,15 @@ namespace Outfitly.Models
 
         public decimal TotalPrice => Price * Quantity;
     }
+
+    public class DashboardViewModel
+    {
+        public string UserName { get; set; } = string.Empty;
+        public string UserEmail { get; set; } = string.Empty;
+        public int TotalOrders { get; set; }
+        public int PendingOrders { get; set; }
+        public decimal TotalSpent { get; set; }
+        public List<Order> RecentOrders { get; set; } = new List<Order>();
+        public ShippingAddress? DefaultAddress { get; set; }
+    }
 }

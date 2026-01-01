@@ -14,6 +14,6 @@
     "@tailwindcss/cli": "^4.1.16"
   },
   "devDependencies": {
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^4.1.17"
   }
 }

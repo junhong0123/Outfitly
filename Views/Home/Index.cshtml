@@ -2,6 +2,103 @@
     ViewData["Title"] = "Home";
 }
 
+@* npx tailwindcss -i ./wwwroot/css/output.css -o ./wwwroot/css/site.css --watch *@
+
+<style>
+    /* Fade-in animation for product cards */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .product-card {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+        /* Stagger animation delays */
+        .product-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .product-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .product-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .product-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .product-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .product-card:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+    /* Image zoom effect */
+    .product-image {
+        transition: transform 0.5s ease;
+    }
+
+    .group:hover .product-image {
+        transform: scale(1.08);
+    }
+
+    /* Lookbook hover effect */
+    .lookbook-item {
+        transition: transform 0.3s ease;
+    }
+
+        .lookbook-item:hover {
+            transform: translateY(-8px);
+        }
+
+    /* Flash animation for countdown */
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
+    }
+
+    .countdown-number {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Badge animations */
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .badge-new {
+        animation: slideInRight 0.5s ease-out;
+    }
+</style>
+
 <!-- Hero Section -->
 <section class="bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
@@ -26,8 +123,87 @@
     </div>
 </section>
 
-<!-- AI Driven Selections -->
+<!-- Limited Time Offer Countdown -->
+    @* <section class="bg-red-600 text-white py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-center">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                    </svg>
+                    <span class="font-medium text-sm md:text-base">⚡ FLASH SALE - 30% OFF SELECTED ITEMS</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm md:text-base">
+                    <span class="font-light">Ends in:</span>
+                    <div class="flex gap-2">
+                        <div class="bg-white text-red-600 px-3 py-1 rounded font-bold countdown-number">
+                            <span id="hours">12</span>
+                        </div>
+                        <span class="font-bold">:</span>
+                        <div class="bg-white text-red-600 px-3 py-1 rounded font-bold countdown-number">
+                            <span id="minutes">34</span>
+                        </div>
+                        <span class="font-bold">:</span>
+                        <div class="bg-white text-red-600 px-3 py-1 rounded font-bold countdown-number">
+                            <span id="seconds">56</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> *@
+
+<!-- New Arrivals -->
 <section class="py-16 md:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <h2 class="text-3xl md:text-4xl font-light text-black mb-2">New Arrivals</h2>
+                <p class="text-gray-500 text-xs">Fresh styles just landed</p>
+            </div>
+            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-filter="new"
+               class="text-xs text-gray-700 hover:text-black border-b border-gray-700 hidden sm:block">
+                View All
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            @{
+                var newProducts = new[] {
+                        new { Id = 1, Name = "Oversized Blazer", Price = "$159.00", IsNew = true },
+                        new { Id = 2, Name = "Silk Midi Skirt", Price = "$119.00", IsNew = true },
+                        new { Id = 3, Name = "Knit Cardigan", Price = "$89.00", IsNew = true },
+                        new { Id = 4, Name = "Wide Leg Jeans", Price = "$79.00", IsNew = true }
+                        };
+
+                foreach (var product in newProducts)
+                {
+                    <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                       class="group cursor-pointer product-card">
+                        <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                            @if (product.IsNew)
+                            {
+                                <span class="badge-new absolute top-3 left-3 bg-black text-white text-xs px-3 py-1 rounded-full z-10">NEW</span>
+                            }
+                            <div class="product-image absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                                Product Image
+                            </div>
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                            <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                                Quick Add
+                            </button>
+                        </div>
+                        <h3 class="text-sm font-light text-black mb-1">@product.Name</h3>
+                        <p class="text-xs text-gray-600">@product.Price</p>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</section>
+
+<!-- AI Driven Selections -->
+<section class="py-16 md:py-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-end mb-12">
             <div>
@@ -41,62 +217,76 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
-            <!-- Product Card 1 -->
-            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="1"
-               class="group cursor-pointer">
-                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
-                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-                    <!-- Quick Add Button (Hover) -->
-                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
-                        Quick Add
-                    </button>
-                </div>
-                <h3 class="text-sm font-light text-black mb-1">Minimal Cotton Tee</h3>
-                <p class="text-xs text-gray-600">$49.00</p>
-            </a>
+            @{
+                var aiProducts = new[] {
+                        new { Id = 5, Name = "Minimal Cotton Tee", Price = "$49.00", IsHot = false },
+                        new { Id = 6, Name = "Tailored Linen Pants", Price = "$89.00", IsHot = true },
+                        new { Id = 7, Name = "Leather Crossbody", Price = "$129.00", IsHot = true },
+                        new { Id = 8, Name = "Classic Wool Coat", Price = "$249.00", IsHot = false }
+                        };
 
-            <!-- Product Card 2 -->
-            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
-               class="group cursor-pointer">
-                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
-                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
-                        Quick Add
-                    </button>
-                </div>
-                <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
-                <p class="text-xs text-gray-600">$89.00</p>
-            </a>
+                foreach (var product in aiProducts)
+                {
+                    <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                       class="group cursor-pointer product-card">
+                        <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
+                            @if (product.IsHot)
+                            {
+                                <span class="badge-new absolute top-3 left-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full z-10">🔥 HOT</span>
+                            }
+                            <div class="product-image absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                                Product Image
+                            </div>
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                            <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
+                                Quick Add
+                            </button>
+                        </div>
+                        <h3 class="text-sm font-light text-black mb-1">@product.Name</h3>
+                        <p class="text-xs text-gray-600">@product.Price</p>
+                    </a>
+                }
+            }
+        </div>
+    </div>
+</section>
 
-            <!-- Product Card 3 -->
-            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
-               class="group cursor-pointer">
-                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
-                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
-                        Quick Add
-                    </button>
-                </div>
-                <h3 class="text-sm font-light text-black mb-1">Leather Crossbody</h3>
-                <p class="text-xs text-gray-600">$129.00</p>
-            </a>
+<!-- Style Inspiration Lookbook -->
+<section class="py-16 md:py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-light text-black mb-2">Style Inspiration</h2>
+            <p class="text-gray-500 text-xs">Discover how to style our collections</p>
+        </div>
 
-            <!-- Product Card 4 -->
-            <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="4"
-               class="group cursor-pointer">
-                <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded">
-                    <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-                    <button class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 text-xs opacity-0 group-hover:opacity-100 transition duration-300">
-                        Quick Add
-                    </button>
-                </div>
-                <h3 class="text-sm font-light text-black mb-1">Classic Wool Coat</h3>
-                <p class="text-xs text-gray-600">$249.00</p>
-            </a>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            @{
+                var lookbooks = new[] {
+                        new { Title = "Minimalist Essentials", Description = "Clean lines, timeless pieces", Items = "5 items" },
+                        new { Title = "Urban Explorer", Description = "Street style meets comfort", Items = "6 items" },
+                        new { Title = "Modern Professional", Description = "Elevated workwear", Items = "4 items" }
+                        };
+
+                foreach (var look in lookbooks)
+                {
+                    <div class="lookbook-item cursor-pointer">
+                        <div class="bg-gray-100 aspect-[3/4] mb-4 relative overflow-hidden rounded group">
+                            <div class="product-image absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                                Lookbook Image
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition duration-300"></div>
+                            <div class="absolute bottom-6 left-6 right-6 text-white opacity-0 group-hover:opacity-100 transition duration-300">
+                                <p class="text-xs mb-2">@look.Items</p>
+                                <button class="text-xs border border-white px-4 py-2 hover:bg-white hover:text-black transition">
+                                    Shop the Look
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="text-base font-light text-black mb-1">@look.Title</h3>
+                        <p class="text-xs text-gray-500">@look.Description</p>
+                    </div>
+                }
+            }
         </div>
     </div>
 </section>
@@ -107,41 +297,25 @@
         <h2 class="text-3xl md:text-4xl font-light text-black mb-12 text-center">Shop by Category</h2>
 
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <!-- Category 1: Tops -->
-            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="tops"
-               class="group">
-                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
-                    <span class="text-gray-400 text-xs">Tops Category</span>
-                </div>
-                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">TOPS</h3>
-            </a>
+            @{
+                var categories = new[] {
+                        new { Name = "TOPS", Route = "tops" },
+                        new { Name = "BOTTOMS", Route = "bottoms" },
+                        new { Name = "OUTERWEAR", Route = "outerwear" },
+                        new { Name = "ACCESSORIES", Route = "accessories" }
+                        };
 
-            <!-- Category 2: Bottoms -->
-            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="bottoms"
-               class="group">
-                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
-                    <span class="text-gray-400 text-xs">Bottoms Category</span>
-                </div>
-                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">BOTTOMS</h3>
-            </a>
-
-            <!-- Category 3: Outerwear -->
-            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="outerwear"
-               class="group">
-                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
-                    <span class="text-gray-400 text-xs">Outerwear Category</span>
-                </div>
-                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">OUTERWEAR</h3>
-            </a>
-
-            <!-- Category 4: Accessories -->
-            <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="accessories"
-               class="group">
-                <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
-                    <span class="text-gray-400 text-xs">Accessories Category</span>
-                </div>
-                <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">ACCESSORIES</h3>
-            </a>
+                foreach (var category in categories)
+                {
+                    <a asp-area="" asp-controller="Products" asp-action="Index" asp-route-category="@category.Route"
+                       class="group">
+                        <div class="bg-gray-200 aspect-square mb-4 flex items-center justify-center overflow-hidden rounded hover:bg-gray-300 transition">
+                            <span class="text-gray-400 text-xs">@category.Name Category</span>
+                        </div>
+                        <h3 class="text-center text-sm tracking-wider text-black group-hover:text-gray-600 transition">@category.Name</h3>
+                    </a>
+                }
+            }
         </div>
     </div>
 </section>
@@ -164,14 +338,63 @@
 
 @section Scripts {
     <script>
-        // Quick add to cart functionality (placeholder)
+        // Countdown Timer
+        function updateCountdown() {
+            const now = new Date();
+            const midnight = new Date();
+            midnight.setHours(24, 0, 0, 0);
+
+            const diff = midnight - now;
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Quick add to cart functionality
         document.querySelectorAll('.group button').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                alert('Product added to cart!');
+
+                // Add animation feedback
+                this.textContent = '✓ Added!';
+                this.classList.add('bg-green-500', 'text-white');
+
+                setTimeout(() => {
+                    this.textContent = 'Quick Add';
+                    this.classList.remove('bg-green-500', 'text-white');
+                }, 1500);
+
                 // TODO: Implement actual cart functionality
             });
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe product cards
+        document.querySelectorAll('.product-card').forEach(card => {
+            observer.observe(card);
         });
     </script>
 }
