@@ -1,27 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-
+﻿// Models/CartItem.cs
 namespace Outfitly.Models
 {
-    /// <summary>
-    /// Represents a cart item in the database (persistent cart)
-    /// </summary>
     public class CartItem
-    {
-        public int Id { get; set; }
-        public string UserId { get; set; } = string.Empty;
-        public int ProductId { get; set; }
-        public int Quantity { get; set; }
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-
-        // Navigation properties
-        public IdentityUser? User { get; set; }
-        public Product? Product { get; set; }
-    }
-
-    /// <summary>
-    /// View model for cart display with calculated properties
-    /// </summary>
-    public class CartItemViewModel
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
@@ -38,7 +18,7 @@ namespace Outfitly.Models
 
     public class Cart
     {
-        public List<CartItemViewModel> Items { get; set; } = new List<CartItemViewModel>();
+        public List<CartItem> Items { get; set; } = new List<CartItem>();
 
         // Calculate cart subtotal
         public decimal Subtotal => Items.Sum(item => item.TotalPrice);

@@ -92,11 +92,13 @@
             <div class="border-t border-gray-200 pt-6">
                 <h3 class="text-xs font-medium text-black mb-3 tracking-wide">COLOR</h3>
                 <div class="flex gap-3">
-                    <button class="color-option w-10 h-10 rounded-full bg-black border-2 border-gray-300 hover:border-black transition ring-2 ring-black ring-offset-2" data-color="black" title="Black"></button>
-                    <button class="color-option w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-black transition" data-color="white" title="White"></button>
-                    <button class="color-option w-10 h-10 rounded-full bg-gray-500 border-2 border-gray-300 hover:border-black transition" data-color="gray" title="Gray"></button>
-                    <button class="color-option w-10 h-10 rounded-full bg-blue-600 border-2 border-gray-300 hover:border-black transition" data-color="blue" title="Blue"></button>
-                    <button class="color-option w-10 h-10 rounded-full bg-amber-100 border-2 border-gray-300 hover:border-black transition" data-color="beige" title="Beige"></button>
+                    @foreach (var color in Model.AvailableColors)
+                    {
+                        <button class="color-option w-10 h-10 rounded-full border-2 border-gray-300 hover:border-black transition @(color == "black" ? "bg-black ring-2 ring-black ring-offset-2" : color == "white" ? "bg-white" : color == "gray" ? "bg-gray-500" : color == "blue" ? "bg-blue-600" : color == "navy" ? "bg-blue-900" : color == "beige" ? "bg-amber-100" : color == "cream" ? "bg-amber-50" : color == "brown" ? "bg-yellow-700" : color == "pink" ? "bg-pink-200" : "bg-gray-400")"
+                                data-color="@color"
+                                title="@color">
+                        </button>
+                    }
                 </div>
             </div>
 
@@ -107,11 +109,12 @@
                     <button class="text-xs text-gray-600 hover:text-black underline">Size Guide</button>
                 </div>
                 <div class="grid grid-cols-5 gap-2">
-                    <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">XS</button>
-                    <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">S</button>
-                    <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">M</button>
-                    <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">L</button>
-                    <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">XL</button>
+                    @foreach (var size in Model.AvailableSizes)
+                    {
+                        <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">
+                            @size
+                        </button>
+                    }
                 </div>
             </div>
 
@@ -133,17 +136,11 @@
                 </div>
             </div>
 
-            <!-- Add to Cart Form -->
+            <!-- Add to Cart Button -->
             <div class="border-t border-gray-200 pt-6">
-                <form id="addToCartForm" asp-controller="Cart" asp-action="Add" method="post">
-                    <input type="hidden" name="productId" value="@Model.Id" />
-                    <input type="hidden" id="formQuantity" name="quantity" value="1" />
-                    <input type="hidden" id="formColor" name="color" value="black" />
-                    <input type="hidden" id="formSize" name="size" value="" />
-                    <button type="submit" id="addToCartBtn" class="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-800 transition mb-3">
-                        ADD TO CART
-                    </button>
-                </form>
+                <button id="addToCartBtn" class="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-800 transition mb-3">
+                    ADD TO CART
+                </button>
                 <button class="w-full border border-gray-300 text-black py-4 text-sm tracking-wide hover:bg-gray-50 transition flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -194,29 +191,6 @@
                         <p>Machine wash cold. Tumble dry low. Do not bleach. Iron on low heat if needed.</p>
                     </div>
                 </details>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recommended for You Section (AI Placeholder) -->
-<div class="bg-white border-t border-gray-200 py-16 md:py-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-8">
-            <h2 class="text-3xl md:text-4xl font-light text-black mb-2">Recommended for You</h2>
-            <p class="text-sm text-gray-500">
-                <!-- AI Placeholder: This section will be populated via AJAX/Python API later -->
-                Loading recommendations...
-            </p>
-        </div>
-
-        <!-- Placeholder for AI recommendations -->
-        <div class="flex items-center justify-center py-12">
-            <div class="text-center">
-                <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <p class="text-gray-400 text-sm">AI recommendations will appear here</p>
             </div>
         </div>
     </div>
@@ -389,24 +363,21 @@
             quantityInput.value = currentValue + 1;
         });
 
-        // Add to cart form submission
-        document.getElementById('addToCartForm').addEventListener('submit', function(e) {
-            const selectedColor = document.querySelector('.color-option.ring-2')?.dataset.color || 'default';
+        // Add to cart
+        document.getElementById('addToCartBtn').addEventListener('click', function() {
+            const selectedColor = document.querySelector('.color-option.ring-2')?.dataset.color;
             const selectedSize = document.querySelector('.size-option.bg-black')?.textContent.trim();
             const quantity = quantityInput.value;
 
             if (!selectedSize) {
-                e.preventDefault();
                 alert('Please select a size');
-                return false;
+                return;
             }
 
-            // Update hidden form fields
-            document.getElementById('formQuantity').value = quantity;
-            document.getElementById('formColor').value = selectedColor;
-            document.getElementById('formSize').value = selectedSize;
-            
-            // Form will submit normally
+            alert(`Added to cart:\nProduct: @Model.Name\nColor: ${selectedColor || 'Default'}\nSize: ${selectedSize}\nQuantity: ${quantity}`);
+
+            // TODO: Implement actual cart functionality
+            // Update cart counter in navigation
         });
     </script>
 }

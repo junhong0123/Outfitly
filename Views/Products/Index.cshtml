@@ -19,7 +19,7 @@
 
         <div class="flex items-center gap-4">
             <p class="text-sm text-gray-600 hidden sm:block">
-                <span class="font-medium text-black">@Model.TotalCount</span> products
+                <span class="font-medium text-black">124</span> products
             </p>
             <select id="sortSelect" class="text-sm border border-gray-300 rounded px-4 py-2.5 focus:outline-none focus:border-black bg-white">
                 <option value="featured">Featured</option>
@@ -32,36 +32,96 @@
     </div>
 
     <!-- Products Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-        @if (Model.Products != null && Model.Products.Any())
-        {
-            @foreach (var product in Model.Products)
-            {
-                <!-- Product Card -->
-                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
-                   class="group cursor-pointer product-card">
-                    <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                        @if (!string.IsNullOrEmpty(product.ImageUrl))
-                        {
-                            <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-full object-cover" />
-                        }
-                        else
-                        {
-                            <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                        }
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-                    </div>
-                    <h3 class="text-sm font-light text-black mb-1">@product.Name</h3>
-                    <p class="text-xs text-gray-600">$@product.Price.ToString("F2")</p>
-                </a>
-            }
-        }
-        else
-        {
-            <div class="col-span-2 md:col-span-4 text-center py-12">
-                <p class="text-gray-500">No products found.</p>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+
+        <!-- Product Card 1 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="1"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
             </div>
-        }
+            <h3 class="text-sm font-light text-black mb-1">Minimal Cotton Tee</h3>
+            <p class="text-xs text-gray-600">$49.00</p>
+        </a>
+
+        <!-- Product Card 2 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
+            <p class="text-xs text-gray-600">$89.00</p>
+        </a>
+
+        <!-- Product Card 3 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Leather Crossbody Bag</h3>
+            <p class="text-xs text-gray-600">$129.00</p>
+        </a>
+
+        <!-- Product Card 4 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="4"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Classic Wool Coat</h3>
+            <p class="text-xs text-gray-600">$249.00</p>
+        </a>
+
+        <!-- Product Card 5 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="5"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Silk Blend Blouse</h3>
+            <p class="text-xs text-gray-600">$79.00</p>
+        </a>
+
+        <!-- Product Card 6 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="6"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Denim Jacket</h3>
+            <p class="text-xs text-gray-600">$119.00</p>
+        </a>
+
+        <!-- Product Card 7 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="7"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Wide Leg Trousers</h3>
+            <p class="text-xs text-gray-600">$95.00</p>
+        </a>
+
+        <!-- Product Card 8 -->
+        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="8"
+           class="group cursor-pointer product-card">
+            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+            </div>
+            <h3 class="text-sm font-light text-black mb-1">Cashmere Sweater</h3>
+            <p class="text-xs text-gray-600">$159.00</p>
+        </a>
+
     </div>
 
     <!-- Pagination -->
