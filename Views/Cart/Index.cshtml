@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Outfitly.Models.Cart
+@{
     ViewData["Title"] = "Shopping Cart";
 }
 
@@ -6,288 +7,230 @@
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 class="text-3xl md:text-4xl font-light text-black">Shopping Cart</h1>
+        @if (!string.IsNullOrEmpty(ViewBag.Message as string))
+        {
+            <p class="text-gray-600 mt-2">@ViewBag.Message</p>
+        }
     </div>
 </div>
 
-<!-- Cart Content -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+@if (Model.Items.Any())
+{
+    <!-- Cart Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Left Column: Cart Items -->
-        <div class="lg:col-span-2 space-y-4">
-
-            <!-- Cart Item 1 -->
-            <div class="bg-white border border-gray-200 rounded p-4 flex gap-4">
-                <!-- Product Image -->
-                <div class="w-24 h-24 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                    <span class="text-gray-400 text-xs">Image</span>
-                </div>
-
-                <!-- Product Details -->
-                <div class="flex-grow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="text-sm font-medium text-black mb-1">Minimal Cotton Tee</h3>
-                            <p class="text-xs text-gray-600">Color: Black</p>
-                            <p class="text-xs text-gray-600">Size: M</p>
-                        </div>
-                        <button class="remove-item text-gray-400 hover:text-black transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-3">
-                        <!-- Quantity Controls -->
-                        <div class="flex items-center border border-gray-300 rounded">
-                            <button class="decrease-qty px-3 py-1 hover:bg-gray-100 transition">-</button>
-                            <input type="number" value="1" min="1" class="quantity-input w-12 text-center border-x border-gray-300 py-1 text-sm focus:outline-none">
-                            <button class="increase-qty px-3 py-1 hover:bg-gray-100 transition">+</button>
+            <!-- Left Column: Cart Items -->
+            <div class="lg:col-span-2 space-y-4">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="bg-white border border-gray-200 rounded p-4 flex gap-4" data-cart-item-id="@item.Id">
+                        <!-- Product Image -->
+                        <div
+                            class="w-24 h-24 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover">
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-xs">Image</span>
+                            }
                         </div>
 
-                        <!-- Price -->
-                        <p class="text-sm font-medium text-black">$49.00</p>
-                    </div>
-                </div>
-            </div>
+                        <!-- Product Details -->
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="text-sm font-medium text-black mb-1">@item.ProductName</h3>
+                                    @if (!string.IsNullOrEmpty(item.Color))
+                                    {
+                                        <p class="text-xs text-gray-600">Color: @item.Color</p>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.Size))
+                                    {
+                                        <p class="text-xs text-gray-600">Size: @item.Size</p>
+                                    }
+                                </div>
+                                <button class="remove-item text-gray-400 hover:text-black transition" data-item-id="@item.Id">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
 
-            <!-- Cart Item 2 -->
-            <div class="bg-white border border-gray-200 rounded p-4 flex gap-4">
-                <div class="w-24 h-24 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                    <span class="text-gray-400 text-xs">Image</span>
-                </div>
+                            <div class="flex justify-between items-center mt-3">
+                                <!-- Quantity Controls -->
+                                <div class="flex items-center border border-gray-300 rounded">
+                                    <button class="decrease-qty px-3 py-1 hover:bg-gray-100 transition"
+                                        data-item-id="@item.Id">-</button>
+                                    <input type="number" value="@item.Quantity" min="1"
+                                        class="quantity-input w-12 text-center border-x border-gray-300 py-1 text-sm focus:outline-none"
+                                        data-item-id="@item.Id" data-price="@item.Price">
+                                    <button class="increase-qty px-3 py-1 hover:bg-gray-100 transition"
+                                        data-item-id="@item.Id">+</button>
+                                </div>
 
-                <div class="flex-grow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="text-sm font-medium text-black mb-1">Tailored Linen Pants</h3>
-                            <p class="text-xs text-gray-600">Color: Blue</p>
-                            <p class="text-xs text-gray-600">Size: L</p>
-                        </div>
-                        <button class="remove-item text-gray-400 hover:text-black transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-3">
-                        <div class="flex items-center border border-gray-300 rounded">
-                            <button class="decrease-qty px-3 py-1 hover:bg-gray-100 transition">-</button>
-                            <input type="number" value="2" min="1" class="quantity-input w-12 text-center border-x border-gray-300 py-1 text-sm focus:outline-none">
-                            <button class="increase-qty px-3 py-1 hover:bg-gray-100 transition">+</button>
-                        </div>
-                        <p class="text-sm font-medium text-black">$178.00</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cart Item 3 -->
-            <div class="bg-white border border-gray-200 rounded p-4 flex gap-4">
-                <div class="w-24 h-24 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                    <span class="text-gray-400 text-xs">Image</span>
-                </div>
-
-                <div class="flex-grow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="text-sm font-medium text-black mb-1">Leather Crossbody Bag</h3>
-                            <p class="text-xs text-gray-600">Color: Brown</p>
-                            <p class="text-xs text-gray-600">Size: One Size</p>
-                        </div>
-                        <button class="remove-item text-gray-400 hover:text-black transition">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="flex justify-between items-center mt-3">
-                        <div class="flex items-center border border-gray-300 rounded">
-                            <button class="decrease-qty px-3 py-1 hover:bg-gray-100 transition">-</button>
-                            <input type="number" value="1" min="1" class="quantity-input w-12 text-center border-x border-gray-300 py-1 text-sm focus:outline-none">
-                            <button class="increase-qty px-3 py-1 hover:bg-gray-100 transition">+</button>
-                        </div>
-                        <p class="text-sm font-medium text-black">$129.00</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Continue Shopping Link -->
-            <div class="pt-4">
-                <a asp-area="" asp-controller="Products" asp-action="Index"
-                   class="inline-flex items-center text-sm text-gray-700 hover:text-black transition">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Continue Shopping
-                </a>
-            </div>
-        </div>
-
-        <!-- Right Column: Order Summary -->
-        <div class="lg:col-span-1">
-            <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
-                <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
-
-                <!-- Summary Details -->
-                <div class="space-y-3 mb-6">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Subtotal (4 items)</span>
-                        <span class="text-black font-medium" id="subtotal">$356.00</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Shipping</span>
-                        <span class="text-black font-medium" id="shipping">$10.00</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Tax</span>
-                        <span class="text-black font-medium" id="tax">$35.60</span>
-                    </div>
-                </div>
-
-                <!-- Promo Code -->
-                <div class="mb-6 pb-6 border-t border-b border-gray-200 py-6">
-                    <label class="text-xs font-medium text-black mb-2 block tracking-wide">PROMO CODE</label>
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="Enter code"
-                               class="flex-grow text-sm border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-black">
-                        <button class="bg-gray-100 text-black px-4 py-2 text-sm hover:bg-gray-200 transition rounded">
-                            Apply
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Total -->
-                <div class="flex justify-between items-center mb-6">
-                    <span class="text-base font-medium text-black">Total</span>
-                    <span class="text-2xl font-light text-black" id="total">$401.60</span>
-                </div>
-
-                <!-- Checkout Button -->
-                <a asp-area="" asp-controller="Checkout" asp-action="Index"
-                   class="block w-full bg-black text-white text-center py-4 text-sm tracking-wide hover:bg-gray-800 transition rounded mb-3">
-                    PROCEED TO CHECKOUT
-                </a>
-
-                <!-- Payment Methods -->
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 mb-2">We accept</p>
-                    <div class="flex justify-center gap-2">
-                        <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
-                            <span class="text-xs text-gray-500">VISA</span>
-                        </div>
-                        <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
-                            <span class="text-xs text-gray-500">MC</span>
-                        </div>
-                        <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
-                            <span class="text-xs text-gray-500">AMEX</span>
+                                <!-- Price -->
+                                <p class="text-sm font-medium text-black">$@item.TotalPrice.ToString("F2")</p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
 
-                <!-- Free Shipping Notice -->
-                <div class="mt-6 bg-amber-50 border border-amber-200 rounded p-4">
-                    <div class="flex items-start gap-2">
-                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <!-- Continue Shopping Link -->
+                <div class="pt-4">
+                    <a asp-area="" asp-controller="Products" asp-action="Index"
+                        class="inline-flex items-center text-sm text-gray-700 hover:text-black transition">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
-                        <p class="text-xs text-amber-800">
-                            Add <strong>$44.00</strong> more to get free shipping!
-                        </p>
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
+                    <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
+
+                    <!-- Summary Details -->
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Subtotal (@Model.TotalItems items)</span>
+                            <span class="text-black font-medium" id="subtotal">$@Model.Subtotal.ToString("F2")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Shipping</span>
+                            <span class="text-black font-medium" id="shipping">@(Model.Subtotal >= 100 ? "Free" :
+                                                            "$10.00")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Tax</span>
+                            <span class="text-black font-medium" id="tax">$@((Model.Subtotal * 0.1m).ToString("F2"))</span>
+                        </div>
                     </div>
+
+                    <!-- Total -->
+                    @{
+                        var shipping = Model.Subtotal >= 100 ? 0 : 10.00m;
+                        var tax = Model.Subtotal * 0.1m;
+                        var total = Model.Subtotal + shipping + tax;
+                    }
+                    <div class="flex justify-between items-center mb-6 pt-4 border-t border-gray-200">
+                        <span class="text-base font-medium text-black">Total</span>
+                        <span class="text-2xl font-light text-black" id="total">$@total.ToString("F2")</span>
+                    </div>
+
+                    <!-- Checkout Button -->
+                    <a asp-area="" asp-controller="Checkout" asp-action="Index"
+                        class="block w-full bg-black text-white text-center py-4 text-sm tracking-wide hover:bg-gray-800 transition rounded mb-3">
+                        PROCEED TO CHECKOUT
+                    </a>
+
+                    <!-- Payment Methods -->
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500 mb-2">We accept</p>
+                        <div class="flex justify-center gap-2">
+                            <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
+                                <span class="text-xs text-gray-500">VISA</span>
+                            </div>
+                            <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
+                                <span class="text-xs text-gray-500">MC</span>
+                            </div>
+                            <div class="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
+                                <span class="text-xs text-gray-500">AMEX</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Subtotal < 100)
+                    {
+                        <!-- Free Shipping Notice -->
+                        <div class="mt-6 bg-amber-50 border border-amber-200 rounded p-4">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="text-xs text-amber-800">
+                                    Add <strong>$@((100 - Model.Subtotal).ToString("F2"))</strong> more to get free shipping!
+                                </p>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<!-- Empty Cart State (Hidden by default) -->
-<div id="emptyCartState" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-    <svg class="w-24 h-24 mx-auto text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-    </svg>
-    <h2 class="text-2xl font-light text-black mb-3">Your cart is empty</h2>
-    <p class="text-sm text-gray-600 mb-8">Discover our curated collection and find your perfect style</p>
-    <a asp-area="" asp-controller="Products" asp-action="Index"
-       class="inline-block bg-black text-white px-8 py-3 text-sm tracking-wide hover:bg-gray-800 transition">
-        START SHOPPING
-    </a>
-</div>
+}
+else
+{
+    <!-- Empty Cart State -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+        <svg class="w-24 h-24 mx-auto text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <h2 class="text-2xl font-light text-black mb-3">Your cart is empty</h2>
+        <p class="text-sm text-gray-600 mb-8">Discover our curated collection and find your perfect style</p>
+        <a asp-area="" asp-controller="Products" asp-action="Index"
+            class="inline-block bg-black text-white px-8 py-3 text-sm tracking-wide hover:bg-gray-800 transition">
+            START SHOPPING
+        </a>
+    </div>
+}
 
 @section Scripts {
     <script>
         // Quantity increase/decrease
         document.querySelectorAll('.increase-qty').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', async function () {
                 const input = this.parentElement.querySelector('.quantity-input');
-                input.value = parseInt(input.value) + 1;
-                updateCartTotals();
+                const newQty = parseInt(input.value) + 1;
+                input.value = newQty;
+                await updateCartItem(this.dataset.itemId, newQty);
             });
         });
 
         document.querySelectorAll('.decrease-qty').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', async function () {
                 const input = this.parentElement.querySelector('.quantity-input');
                 if (parseInt(input.value) > 1) {
-                    input.value = parseInt(input.value) - 1;
-                    updateCartTotals();
+                    const newQty = parseInt(input.value) - 1;
+                    input.value = newQty;
+                    await updateCartItem(this.dataset.itemId, newQty);
                 }
-            });
-        });
-
-        // Quantity input change
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', function() {
-                if (parseInt(this.value) < 1) {
-                    this.value = 1;
-                }
-                updateCartTotals();
             });
         });
 
         // Remove item from cart
         document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', async function () {
                 if (confirm('Remove this item from cart?')) {
-                    const cartItem = this.closest('.bg-white');
-                    cartItem.style.opacity = '0';
-                    setTimeout(() => {
-                        cartItem.remove();
-                        updateCartTotals();
-                        checkEmptyCart();
-                    }, 300);
+                    const itemId = this.dataset.itemId;
+                    const response = await fetch('/Cart/Remove', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `cartItemId=${itemId}`
+                    });
+                    if ((await response.json()).success) {
+                        location.reload();
+                    }
                 }
             });
         });
 
-        // Update cart totals (placeholder calculation)
-        function updateCartTotals() {
-            // TODO: Implement actual calculation based on cart items
-            console.log('Cart totals updated');
+        async function updateCartItem(itemId, quantity) {
+            await fetch('/Cart/Update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `cartItemId=${itemId}&quantity=${quantity}`
+            });
+            location.reload();
         }
-
-        // Check if cart is empty and show empty state
-        function checkEmptyCart() {
-            const cartItems = document.querySelectorAll('.bg-white.border');
-            if (cartItems.length === 0) {
-                document.querySelector('.grid').classList.add('hidden');
-                document.getElementById('emptyCartState').classList.remove('hidden');
-            }
-        }
-
-        // Promo code application
-        document.querySelector('button[class*="Apply"]').addEventListener('click', function() {
-            const promoInput = this.previousElementSibling;
-            const code = promoInput.value.trim();
-
-            if (code) {
-                alert('Promo code "' + code + '" applied!');
-                // TODO: Implement actual promo code logic
-            } else {
-                alert('Please enter a promo code');
-            }
-        });
     </script>
 }

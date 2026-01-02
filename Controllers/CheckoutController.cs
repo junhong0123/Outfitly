@@ -1,71 +1,234 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Outfitly  .Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Outfitly.Data;
+using Outfitly.Models;
+using System.Security.Claims;
 
 namespace Outfitly.Controllers
 {
     public class CheckoutController : Controller
     {
-        // GET: Checkout
-        public IActionResult Index()
-        {
-            // TODO: Check if cart is empty, redirect if needed
-            // var cart = GetCartFromSession();
-            // if (cart.Items.Count == 0)
-            // {
-            //     return RedirectToAction("Index", "Cart");
-            // }
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-            return View();
+        public CheckoutController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
         }
 
-        // POST: Checkout/ProcessOrder
-        [HttpPost]
-        public IActionResult ProcessOrder(CheckoutViewModel model)
+        // GET: Checkout
+        [Authorize]
+        public async Task<IActionResult> Index()
         {
-            if (!ModelState.IsValid)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                return View("Index", model);
+                return Redirect("/Identity/Account/Login?ReturnUrl=/Checkout");
             }
 
-            // TODO: Process the order
-            // 1. Validate shipping address
-            // 2. Process payment
-            // 3. Create order in database
-            // 4. Clear cart
-            // 5. Send confirmation email
+            // Get cart items from database
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
 
-            // For now, simulate order placement
-            var orderId = new Random().Next(10000, 99999);
+            if (!cartItems.Any())
+            {
+                TempData["Error"] = "Your cart is empty.";
+                return RedirectToAction("Index", "Cart");
+            }
 
-            TempData["OrderId"] = orderId;
-            TempData["SuccessMessage"] = "Your order has been placed successfully!";
+            // Get saved addresses (max 3)
+            var savedAddresses = await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.IsDefault)
+                .ThenByDescending(a => a.CreatedAt)
+                .Take(3)
+                .ToListAsync();
 
-            return RedirectToAction("Confirmation", new { id = orderId });
+            // Calculate totals
+            var cartViewModel = new Cart
+            {
+                Items = cartItems.Select(c => new CartItemViewModel
+                {
+                    Id = c.Id,
+                    ProductId = c.ProductId,
+                    ProductName = c.Product?.Name ?? "Unknown",
+                    Price = c.Product?.Price ?? 0,
+                    Quantity = c.Quantity,
+                    ImageUrl = c.Product?.ImageUrl
+                }).ToList()
+            };
+
+            var viewModel = new CheckoutViewModel
+            {
+                Cart = cartViewModel,
+                SavedAddresses = savedAddresses
+            };
+
+            // Pre-fill with default address if exists
+            var defaultAddress = savedAddresses.FirstOrDefault(a => a.IsDefault) ?? savedAddresses.FirstOrDefault();
+            if (defaultAddress != null)
+            {
+                viewModel.SelectedAddressId = defaultAddress.Id;
+                viewModel.ShippingAddress = new ShippingAddress
+                {
+                    FirstName = defaultAddress.FirstName,
+                    LastName = defaultAddress.LastName,
+                    AddressLine1 = defaultAddress.AddressLine1,
+                    AddressLine2 = defaultAddress.AddressLine2,
+                    City = defaultAddress.City,
+                    StateProvince = defaultAddress.StateProvince,
+                    ZipPostalCode = defaultAddress.ZipPostalCode,
+                    Country = defaultAddress.Country,
+                    PhoneNumber = defaultAddress.PhoneNumber ?? ""
+                };
+            }
+
+            return View(viewModel);
+        }
+
+        // POST: Checkout/PlaceOrder
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Redirect("/Identity/Account/Login");
+            }
+
+            // Get cart items from database
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product)
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
+
+            if (!cartItems.Any())
+            {
+                TempData["Error"] = "Your cart is empty.";
+                return RedirectToAction("Index", "Cart");
+            }
+
+            // Calculate total
+            decimal totalAmount = cartItems.Sum(c => (c.Product?.Price ?? 0) * c.Quantity);
+
+            // Save new address if requested and user has less than 3 addresses
+            if (model.SaveNewAddress)
+            {
+                var addressCount = await _context.UserAddresses.CountAsync(a => a.UserId == userId);
+                if (addressCount < 3)
+                {
+                    var newAddress = new UserAddress
+                    {
+                        UserId = userId,
+                        FirstName = model.ShippingAddress.FirstName,
+                        LastName = model.ShippingAddress.LastName,
+                        AddressLine1 = model.ShippingAddress.AddressLine1,
+                        AddressLine2 = model.ShippingAddress.AddressLine2,
+                        City = model.ShippingAddress.City,
+                        StateProvince = model.ShippingAddress.StateProvince,
+                        ZipPostalCode = model.ShippingAddress.ZipPostalCode,
+                        Country = model.ShippingAddress.Country,
+                        PhoneNumber = model.ShippingAddress.PhoneNumber,
+                        IsDefault = addressCount == 0, // First address is default
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _context.UserAddresses.AddAsync(newAddress);
+                }
+            }
+
+            // Create new Order
+            var order = new Order
+            {
+                UserId = userId,
+                TotalAmount = totalAmount,
+                OrderDate = DateTime.UtcNow,
+                Status = "Pending",
+                ShippingAddress = $"{model.ShippingAddress.AddressLine1}, {model.ShippingAddress.City}, {model.ShippingAddress.StateProvince} {model.ShippingAddress.ZipPostalCode}, {model.ShippingAddress.Country}"
+            };
+
+            await _context.Orders.AddAsync(order);
+            await _context.SaveChangesAsync(); // Save to get the Order ID
+
+            // Create OrderItems and log UserInteractions for each item
+            foreach (var cartItem in cartItems)
+            {
+                // Create OrderItem
+                var orderItem = new OrderItem
+                {
+                    OrderId = order.Id,
+                    ProductId = cartItem.ProductId,
+                    Quantity = cartItem.Quantity,
+                    PriceAtPurchase = cartItem.Product?.Price ?? 0
+                };
+                await _context.OrderItems.AddAsync(orderItem);
+
+                // AI Data Logging: Log "Purchase" interaction for each item
+                var interaction = new UserInteraction
+                {
+                    UserId = userId,
+                    ProductId = cartItem.ProductId,
+                    InteractionType = "Purchase",
+                    TimeStamp = DateTime.UtcNow
+                };
+                await _context.UserInteractions.AddAsync(interaction);
+            }
+
+            // Remove all CartItems for this user
+            _context.CartItems.RemoveRange(cartItems);
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Your order has been placed successfully!";
+            return RedirectToAction("Confirmation", new { id = order.Id });
         }
 
         // GET: Checkout/Confirmation/{id}
-        public IActionResult Confirmation(int id)
+        [Authorize]
+        public async Task<IActionResult> Confirmation(int id)
         {
-            // TODO: Get actual order details from database
-            var order = new OrderConfirmation
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
+
+            if (order == null)
             {
-                OrderId = id,
-                OrderDate = DateTime.Now,
-                TotalAmount = 401.60m,
-                Status = "Processing",
-                EstimatedDelivery = DateTime.Now.AddDays(5)
+                return NotFound();
+            }
+
+            var confirmation = new OrderConfirmation
+            {
+                OrderId = order.Id,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                EstimatedDelivery = order.OrderDate.AddDays(5),
+                Items = order.OrderItems.Select(oi => new CartItemViewModel
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product?.Name ?? "Unknown",
+                    Price = oi.PriceAtPurchase,
+                    Quantity = oi.Quantity,
+                    ImageUrl = oi.Product?.ImageUrl
+                }).ToList()
             };
 
-            return View(order);
+            return View(confirmation);
         }
 
         // POST: Checkout/ValidateAddress
         [HttpPost]
         public IActionResult ValidateAddress([FromBody] ShippingAddress address)
         {
-            // TODO: Implement address validation logic
-            // This could integrate with a shipping API
-
             if (string.IsNullOrWhiteSpace(address.FirstName) ||
                 string.IsNullOrWhiteSpace(address.LastName))
             {
@@ -77,19 +240,22 @@ namespace Outfitly.Controllers
 
         // POST: Checkout/CalculateShipping
         [HttpPost]
-        public IActionResult CalculateShipping([FromBody] ShippingAddress address)
+        [Authorize]
+        public async Task<IActionResult> CalculateShipping([FromBody] ShippingAddress address)
         {
-            // TODO: Calculate actual shipping cost based on address
-            // This could integrate with shipping providers
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            decimal cartTotal = 0;
 
-            decimal shippingCost = 10.00m; // Default shipping
+            if (!string.IsNullOrEmpty(userId))
+            {
+                cartTotal = await _context.CartItems
+                    .Include(c => c.Product)
+                    .Where(c => c.UserId == userId)
+                    .SumAsync(c => (c.Product != null ? c.Product.Price : 0) * c.Quantity);
+            }
 
             // Free shipping for orders over $100
-            // var cartTotal = GetCartTotal();
-            // if (cartTotal >= 100)
-            // {
-            //     shippingCost = 0;
-            // }
+            decimal shippingCost = cartTotal >= 100 ? 0 : 10.00m;
 
             return Json(new
             {
@@ -103,18 +269,12 @@ namespace Outfitly.Controllers
         [HttpPost]
         public IActionResult ProcessPayment([FromBody] PaymentInfo payment)
         {
-            // TODO: Integrate with payment gateway (Stripe, PayPal, etc.)
-            // This is a simulated payment processing
-
             if (string.IsNullOrWhiteSpace(payment.CardNumber))
             {
                 return Json(new { success = false, message = "Card number is required" });
             }
 
             // Simulate payment processing
-            System.Threading.Thread.Sleep(1000); // Simulate API call delay
-
-            // Simulate success (in real app, this would be based on payment gateway response)
             var transactionId = Guid.NewGuid().ToString();
 
             return Json(new
@@ -129,12 +289,11 @@ namespace Outfitly.Controllers
         [HttpPost]
         public IActionResult ApplyPromoCode([FromBody] PromoCodeRequest request)
         {
-            // TODO: Validate promo code from database
             var validCodes = new Dictionary<string, decimal>
             {
                 { "SAVE10", 10.00m },
                 { "SAVE20", 20.00m },
-                { "FREESHIP", 10.00m } // Amount equivalent to shipping
+                { "FREESHIP", 10.00m }
             };
 
             if (validCodes.ContainsKey(request.Code.ToUpper()))
@@ -153,33 +312,6 @@ namespace Outfitly.Controllers
                 success = false,
                 message = "Invalid promo code"
             });
-        }
-
-        // Helper method to get cart from session (placeholder)
-        private Cart GetCartFromSession()
-        {
-            // TODO: Implement session cart retrieval
-            return new Cart
-            {
-                Items = new List<CartItem>
-                {
-                    new CartItem
-                    {
-                        Id = 1,
-                        ProductId = 1,
-                        ProductName = "Minimal Cotton Tee",
-                        Price = 49.00m,
-                        Quantity = 1
-                    }
-                }
-            };
-        }
-
-        // Helper method to get cart total (placeholder)
-        private decimal GetCartTotal()
-        {
-            var cart = GetCartFromSession();
-            return cart.Subtotal;
         }
     }
 
