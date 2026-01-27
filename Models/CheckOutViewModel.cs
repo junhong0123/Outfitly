@@ -11,6 +11,11 @@ namespace Outfitly.Models
         public Cart Cart { get; set; } = new Cart();
         public string? PromoCode { get; set; }
         public decimal PromoDiscount { get; set; }
+
+        // Saved address properties
+        public List<SavedAddress> SavedAddresses { get; set; } = new List<SavedAddress>();
+        public int? SelectedAddressId { get; set; }
+        public bool SaveAddress { get; set; }
     }
 
     public class ShippingAddress

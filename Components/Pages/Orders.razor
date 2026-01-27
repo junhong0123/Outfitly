@@ -1,0 +1,387 @@
+@page "/Admin/Orders"
+@attribute [Authorize(Roles = "Admin")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Orders - Admin</PageTitle>
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage customer orders and update their status</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+                <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" @bind="_searchQuery" @bind:event="oninput" @onkeyup="FilterOrders"
+                       placeholder="Search by order number or customer..."
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+            </div>
+            <select @bind="_statusFilter" @bind:after="FilterOrders"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var order in _filteredOrders)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-medium text-indigo-600 dark:text-indigo-400">#@order.OrderNumber</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div>
+                                    <p class="text-sm text-gray-900 dark:text-white">@order.CustomerName</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">@order.CustomerEmail</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                @order.OrderDate.ToString("MMM dd, yyyy HH:mm")
+                            </td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                $@order.Total.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full @GetStatusClass(order.Status)">
+                                    @order.Status
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-2">
+                                    <button @onclick="() => OpenDetailsModal(order)" 
+                                            class="p-2 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    <button @onclick="() => OpenStatusModal(order)" 
+                                            class="p-2 text-gray-400 hover:text-green-600 dark:hover:text-green-400 transition">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!_filteredOrders.Any())
+        {
+            <div class="p-12 text-center">
+                <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400 mt-4">No orders found</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+@if (_showDetailsModal && _selectedOrder != null)
+{
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @onclick="CloseModals">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" @onclick:stopPropagation>
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Order #@_selectedOrder.OrderNumber</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">@_selectedOrder.OrderDate.ToString("MMMM dd, yyyy 'at' HH:mm")</p>
+                </div>
+                <button @onclick="CloseModals" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6">
+                <!-- Customer & Shipping Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Customer Information</h3>
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                            <p class="text-sm text-gray-900 dark:text-white">@_selectedOrder.CustomerName</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">@_selectedOrder.CustomerEmail</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Shipping Address</h3>
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                            <p class="text-sm text-gray-900 dark:text-white">@_selectedOrder.ShippingAddressLine1</p>
+                            @if (!string.IsNullOrEmpty(_selectedOrder.ShippingAddressLine2))
+                            {
+                                <p class="text-sm text-gray-600 dark:text-gray-400">@_selectedOrder.ShippingAddressLine2</p>
+                            }
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                @_selectedOrder.ShippingCity, @_selectedOrder.ShippingState @_selectedOrder.ShippingZipCode
+                            </p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">@_selectedOrder.ShippingCountry</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Order Items</h3>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-600">
+                                    <th class="text-left px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">Product</th>
+                                    <th class="text-left px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">Qty</th>
+                                    <th class="text-right px-4 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
+                                @foreach (var item in _selectedOrder.OrderItems)
+                                {
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded"></div>
+                                                <div>
+                                                    <p class="text-sm text-gray-900 dark:text-white">@item.ProductName</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400">@item.Color / @item.Size</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">@item.Quantity</td>
+                                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right">$@item.TotalPrice.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Subtotal</span>
+                            <span class="text-gray-900 dark:text-white">$@_selectedOrder.Subtotal.ToString("N2")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Shipping</span>
+                            <span class="text-gray-900 dark:text-white">$@_selectedOrder.ShippingCost.ToString("N2")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">Tax</span>
+                            <span class="text-gray-900 dark:text-white">$@_selectedOrder.Tax.ToString("N2")</span>
+                        </div>
+                        @if (_selectedOrder.Discount > 0)
+                        {
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">Discount</span>
+                                <span class="text-green-600">-$@_selectedOrder.Discount.ToString("N2")</span>
+                            </div>
+                        }
+                        <div class="flex justify-between text-base font-medium pt-2 border-t border-gray-200 dark:border-gray-600">
+                            <span class="text-gray-900 dark:text-white">Total</span>
+                            <span class="text-gray-900 dark:text-white">$@_selectedOrder.Total.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Update Status Modal -->
+@if (_showStatusModal && _selectedOrder != null)
+{
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @onclick="CloseModals">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md" @onclick:stopPropagation>
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Update Order Status</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Order #@_selectedOrder.OrderNumber</p>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Status</label>
+                    <span class="px-3 py-1 text-sm font-medium rounded-full @GetStatusClass(_selectedOrder.Status)">
+                        @_selectedOrder.Status
+                    </span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Status</label>
+                    <select @bind="_newStatus" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                @if (_newStatus == "Shipped")
+                {
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tracking Number</label>
+                        <input type="text" @bind="_trackingNumber" 
+                               placeholder="Enter tracking number"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+                }
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button @onclick="CloseModals" 
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    Cancel
+                </button>
+                <button @onclick="UpdateOrderStatus" 
+                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                    Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Order> _orders = new();
+    private List<Order> _filteredOrders = new();
+    private string _searchQuery = "";
+    private string _statusFilter = "";
+
+    private bool _showDetailsModal = false;
+    private bool _showStatusModal = false;
+    private Order? _selectedOrder;
+    private string _newStatus = "";
+    private string _trackingNumber = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _orders = await context.Orders
+            .Include(o => o.OrderItems)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+        _filteredOrders = _orders;
+    }
+
+    private void FilterOrders()
+    {
+        _filteredOrders = _orders;
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _filteredOrders = _filteredOrders
+                .Where(o => o.OrderNumber.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                           o.CustomerName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_statusFilter))
+        {
+            _filteredOrders = _filteredOrders
+                .Where(o => o.Status == _statusFilter)
+                .ToList();
+        }
+    }
+
+    private void OpenDetailsModal(Order order)
+    {
+        _selectedOrder = order;
+        _showDetailsModal = true;
+    }
+
+    private void OpenStatusModal(Order order)
+    {
+        _selectedOrder = order;
+        _newStatus = order.Status;
+        _trackingNumber = order.TrackingNumber ?? "";
+        _showStatusModal = true;
+    }
+
+    private void CloseModals()
+    {
+        _showDetailsModal = false;
+        _showStatusModal = false;
+        _selectedOrder = null;
+    }
+
+    private async Task UpdateOrderStatus()
+    {
+        if (_selectedOrder == null) return;
+
+        await using var context = await DbFactory.CreateDbContextAsync();
+        var order = await context.Orders.FindAsync(_selectedOrder.Id);
+        
+        if (order != null)
+        {
+            order.Status = _newStatus;
+            
+            if (_newStatus == "Shipped")
+            {
+                order.ShippedDate = DateTime.UtcNow;
+                order.TrackingNumber = _trackingNumber;
+            }
+            else if (_newStatus == "Delivered")
+            {
+                order.DeliveredDate = DateTime.UtcNow;
+            }
+
+            await context.SaveChangesAsync();
+            await LoadOrders();
+        }
+
+        CloseModals();
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Pending" => "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+        "Processing" => "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+        "Shipped" => "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+        "Delivered" => "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+        "Cancelled" => "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+        _ => "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+    };
+}

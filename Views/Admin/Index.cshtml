@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Outfitly</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Outfitly.styles.css" asp-append-version="true" />
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+    <component type="typeof(Outfitly.Components.AdminApp)" render-mode="Server" />
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

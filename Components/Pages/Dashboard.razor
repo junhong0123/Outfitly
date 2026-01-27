@@ -1,0 +1,305 @@
+@page "/Admin"
+@attribute [Authorize(Roles = "Admin")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Dashboard - Admin</PageTitle>
+
+<div class="space-y-6">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Revenue -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">$@_totalRevenue.ToString("N2")</p>
+                    <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        +12.5% from last month
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Count -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Orders</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">@_ordersCount</p>
+                    <p class="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        +8.2% from last month
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Products</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">@_productsCount</p>
+                    <p class="text-xs text-purple-600 mt-2 flex items-center gap-1">
+                        <span>@_lowStockCount low stock items</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+                    <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">@_usersCount</p>
+                    <p class="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                        <span>@_newUsersThisMonth new this month</span>
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-600 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Tables Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Chart (Simplified Bar Chart) -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Monthly Revenue</h3>
+            <div class="flex items-end justify-between gap-2 h-48">
+                @foreach (var month in _monthlyRevenue)
+                {
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t-lg transition-all duration-500 hover:from-indigo-600 hover:to-purple-600" 
+                             style="height: @(month.Percentage)%"></div>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 mt-2">@month.Label</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Status Distribution -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Order Status</h3>
+            <div class="space-y-4">
+                @foreach (var status in _orderStatusDistribution)
+                {
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600 dark:text-gray-400">@status.Status</span>
+                            <span class="text-gray-900 dark:text-white font-medium">@status.Count</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="@status.ColorClass h-2 rounded-full transition-all duration-500" style="width: @status.Percentage%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling Products -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Top Selling Products</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sold</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revenue</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var product in _topProducts)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs">
+                                        IMG
+                                    </div>
+                                    <span class="text-sm text-gray-900 dark:text-white font-medium">@product.Name</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">@product.Category</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">$@product.Price.ToString("N2")</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">@product.UnitsSold</td>
+                            <td class="px-6 py-4 text-sm font-medium text-green-600">$@product.Revenue.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Recent Orders</h3>
+            <a href="/Admin/Orders" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View All →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                        <th class="text-left px-6 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var order in _recentOrders)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <td class="px-6 py-4 text-sm font-medium text-indigo-600">#@order.OrderNumber</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">@order.CustomerName</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                            <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">$@order.Total.ToString("N2")</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full @GetStatusClass(order.Status)">
+                                    @order.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private decimal _totalRevenue = 0;
+    private int _ordersCount = 0;
+    private int _productsCount = 0;
+    private int _usersCount = 0;
+    private int _lowStockCount = 0;
+    private int _newUsersThisMonth = 0;
+
+    private List<MonthlyRevenue> _monthlyRevenue = new();
+    private List<OrderStatusItem> _orderStatusDistribution = new();
+    private List<TopProduct> _topProducts = new();
+    private List<Order> _recentOrders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        // Load real data from database
+        _ordersCount = await context.Orders.CountAsync();
+        _productsCount = await context.Products.CountAsync();
+        _lowStockCount = await context.Products.CountAsync(p => p.StockQuantity < 10);
+        _totalRevenue = await context.Orders.SumAsync(o => (decimal?)o.Total) ?? 0;
+        _usersCount = await context.Users.CountAsync();
+
+        // Recent orders
+        _recentOrders = await context.Orders
+            .OrderByDescending(o => o.OrderDate)
+            .Take(5)
+            .ToListAsync();
+
+        // Sample data for charts (in production, calculate from real data)
+        _monthlyRevenue = new List<MonthlyRevenue>
+        {
+            new("Jan", 45), new("Feb", 60), new("Mar", 35),
+            new("Apr", 75), new("May", 55), new("Jun", 80),
+            new("Jul", 65), new("Aug", 90), new("Sep", 70),
+            new("Oct", 85), new("Nov", 95), new("Dec", 100)
+        };
+
+        // Order status distribution
+        var pendingCount = await context.Orders.CountAsync(o => o.Status == "Pending");
+        var processingCount = await context.Orders.CountAsync(o => o.Status == "Processing");
+        var shippedCount = await context.Orders.CountAsync(o => o.Status == "Shipped");
+        var deliveredCount = await context.Orders.CountAsync(o => o.Status == "Delivered");
+
+        var totalOrders = pendingCount + processingCount + shippedCount + deliveredCount;
+        if (totalOrders == 0) totalOrders = 1; // Avoid division by zero
+
+        _orderStatusDistribution = new List<OrderStatusItem>
+        {
+            new("Pending", pendingCount, (pendingCount * 100) / totalOrders, "bg-yellow-500"),
+            new("Processing", processingCount, (processingCount * 100) / totalOrders, "bg-blue-500"),
+            new("Shipped", shippedCount, (shippedCount * 100) / totalOrders, "bg-purple-500"),
+            new("Delivered", deliveredCount, (deliveredCount * 100) / totalOrders, "bg-green-500")
+        };
+
+        // Top products (based on order items)
+        _topProducts = await context.Products
+            .Take(5)
+            .Select(p => new TopProduct
+            {
+                Name = p.Name,
+                Category = p.Category,
+                Price = p.Price,
+                UnitsSold = context.OrderItems.Where(oi => oi.ProductId == p.Id).Sum(oi => oi.Quantity),
+                Revenue = context.OrderItems.Where(oi => oi.ProductId == p.Id).Sum(oi => oi.Price * oi.Quantity)
+            })
+            .OrderByDescending(p => p.Revenue)
+            .ToListAsync();
+
+        // If no products, show sample data
+        if (!_topProducts.Any())
+        {
+            _topProducts = new List<TopProduct>
+            {
+                new() { Name = "Sample Product 1", Category = "Clothing", Price = 49.99m, UnitsSold = 0, Revenue = 0 },
+                new() { Name = "Sample Product 2", Category = "Accessories", Price = 29.99m, UnitsSold = 0, Revenue = 0 }
+            };
+        }
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Pending" => "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+        "Processing" => "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+        "Shipped" => "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+        "Delivered" => "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+        "Cancelled" => "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+        _ => "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+    };
+
+    private record MonthlyRevenue(string Label, int Percentage);
+    private record OrderStatusItem(string Status, int Count, int Percentage, string ColorClass);
+
+    private class TopProduct
+    {
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public decimal Price { get; set; }
+        public int UnitsSold { get; set; }
+        public decimal Revenue { get; set; }
+    }
+}

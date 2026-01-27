@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss -i ./wwwroot/css/output.css -o ./wwwroot/css/site.css --watch"
+    "css:build": "tailwindcss -i ./wwwroot/css/output.css -o ./wwwroot/css/site.css --minify",
+    "css:watch": "tailwindcss -i ./wwwroot/css/output.css -o ./wwwroot/css/site.css --watch",
+    "dev": "concurrently \"npm run css:watch\" \"dotnet watch run\""
   },
   "keywords": [],
   "author": "",

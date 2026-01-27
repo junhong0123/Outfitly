@@ -1,3 +1,4 @@
 ﻿@import "tailwindcss";
 @source "../../Views/**/*.cshtml";
 @source "../../Pages/**/*.cshtml";
+@source "../../Pages/**/*.razor";

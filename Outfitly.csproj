@@ -25,4 +25,17 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+  </ItemGroup>
+
+  <!-- Tailwind CSS Build Integration - Runs automatically before build -->
+  <Target Name="BuildTailwindCSS" BeforeTargets="Build">
+    <Message Importance="high" Text="🎨 Compiling Tailwind CSS..." />
+    <Exec Command="$(ProjectDir)tailwindcss.exe -i ./wwwroot/css/output.css -o ./wwwroot/css/site.css --minify" 
+          WorkingDirectory="$(ProjectDir)"
+          ConsoleToMSBuild="true"
+          ContinueOnError="true" />
+  </Target>
+
 </Project>

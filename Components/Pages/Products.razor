@@ -1,0 +1,351 @@
+@page "/Admin/Products"
+@attribute [Authorize(Roles = "Admin")]
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<PageTitle>Products - Admin</PageTitle>
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Products</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your product catalog</p>
+        </div>
+        <button @onclick="OpenAddModal"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Product
+        </button>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+                <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" @bind="_searchQuery" @bind:event="oninput" @onkeyup="SearchProducts"
+                    placeholder="Search products..."
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+            </div>
+            <select @bind="_categoryFilter" @bind:after="FilterProducts"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="">All Categories</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Footwear">Footwear</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @foreach (var product in _filteredProducts)
+        {
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition group">
+                <!-- Product Image -->
+                <div class="aspect-square bg-gray-100 dark:bg-gray-700 relative">
+                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                    {
+                        <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-full object-cover" />
+                    }
+                    else
+                    {
+                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    }
+
+                    <!-- Quick Actions -->
+                    <div
+                        class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                        <button @onclick="() => OpenEditModal(product)"
+                            class="p-2 bg-white rounded-lg hover:bg-gray-100 transition">
+                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button @onclick="() => DeleteProduct(product.Id)"
+                            class="p-2 bg-red-500 rounded-lg hover:bg-red-600 transition">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Stock Badge -->
+                    @if (product.StockQuantity < 10)
+                    {
+                        <div class="absolute top-2 left-2">
+                            <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                Low Stock: @product.StockQuantity
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Product Info -->
+                <div class="p-4">
+                    <span class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">@product.Category</span>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white mt-1 line-clamp-1">@product.Name</h3>
+                    <div class="flex items-center justify-between mt-2">
+                        <span
+                            class="text-lg font-semibold text-gray-900 dark:text-white">$@product.Price.ToString("N2")</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Stock: @product.StockQuantity</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!_filteredProducts.Any())
+    {
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p class="text-gray-500 dark:text-gray-400 mt-4">No products found</p>
+            <button @onclick="OpenAddModal"
+                class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                Add Your First Product
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Add/Edit Modal -->
+@if (_showModal)
+{
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @onclick="CloseModal">
+        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            @onclick:stopPropagation>
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    @(_isEditing ? "Edit Product" : "Add New Product")
+                </h2>
+                <button @onclick="CloseModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name
+                            *</label>
+                        <input type="text" @bind="_editProduct.Name"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price *</label>
+                        <input type="number" step="0.01" @bind="_editProduct.Price"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity
+                            *</label>
+                        <input type="number" @bind="_editProduct.StockQuantity"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
+                        <select @bind="_editProduct.Category"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">Select Category</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Accessories">Accessories</option>
+                            <option value="Footwear">Footwear</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
+                        <input type="text" @bind="_editProduct.ImageUrl"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea @bind="_editProduct.Description" rows="3"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Available Colors
+                            (comma-separated)</label>
+                        <input type="text" @bind="_colorsInput" placeholder="Black, White, Blue"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Available Sizes
+                            (comma-separated)</label>
+                        <input type="text" @bind="_sizesInput" placeholder="S, M, L, XL"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button @onclick="CloseModal"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    Cancel
+                </button>
+                <button @onclick="SaveProduct"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                    @(_isEditing ? "Update Product" : "Add Product")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Product> _products = new();
+    private List<Product> _filteredProducts = new();
+    private string _searchQuery = "";
+    private string _categoryFilter = "";
+
+    private bool _showModal = false;
+    private bool _isEditing = false;
+    private Product _editProduct = new();
+    private string _colorsInput = "";
+    private string _sizesInput = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _products = await context.Products.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        _filteredProducts = _products;
+    }
+
+    private void SearchProducts()
+    {
+        FilterProducts();
+    }
+
+    private void FilterProducts()
+    {
+        _filteredProducts = _products;
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _filteredProducts = _filteredProducts
+            .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_categoryFilter))
+        {
+            _filteredProducts = _filteredProducts
+            .Where(p => p.Category == _categoryFilter)
+            .ToList();
+        }
+    }
+
+    private void OpenAddModal()
+    {
+        _isEditing = false;
+        _editProduct = new Product { CreatedAt = DateTime.Now };
+        _colorsInput = "";
+        _sizesInput = "";
+        _showModal = true;
+    }
+
+    private void OpenEditModal(Product product)
+    {
+        _isEditing = true;
+        _editProduct = new Product
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Price = product.Price,
+            StockQuantity = product.StockQuantity,
+            Category = product.Category,
+            ImageUrl = product.ImageUrl,
+            Description = product.Description,
+            AvailableColors = product.AvailableColors,
+            AvailableSizes = product.AvailableSizes,
+            CreatedAt = product.CreatedAt
+        };
+        _colorsInput = string.Join(", ", product.AvailableColors);
+        _sizesInput = string.Join(", ", product.AvailableSizes);
+        _showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+    }
+
+    private async Task SaveProduct()
+    {
+        _editProduct.AvailableColors = _colorsInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(c => c.Trim()).ToList();
+        _editProduct.AvailableSizes = _sizesInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(s => s.Trim()).ToList();
+
+        await using var context = await DbFactory.CreateDbContextAsync();
+
+        if (_isEditing)
+        {
+            var existing = await context.Products.FindAsync(_editProduct.Id);
+            if (existing != null)
+            {
+                existing.Name = _editProduct.Name;
+                existing.Price = _editProduct.Price;
+                existing.StockQuantity = _editProduct.StockQuantity;
+                existing.Category = _editProduct.Category;
+                existing.ImageUrl = _editProduct.ImageUrl;
+                existing.Description = _editProduct.Description;
+                existing.AvailableColors = _editProduct.AvailableColors;
+                existing.AvailableSizes = _editProduct.AvailableSizes;
+            }
+        }
+        else
+        {
+            context.Products.Add(_editProduct);
+        }
+
+        await context.SaveChangesAsync();
+        await LoadProducts();
+        CloseModal();
+    }
+
+    private async Task DeleteProduct(int id)
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        var product = await context.Products.FindAsync(id);
+        if (product != null)
+        {
+            context.Products.Remove(product);
+            await context.SaveChangesAsync();
+            await LoadProducts();
+        }
+    }
+}

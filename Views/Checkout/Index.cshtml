@@ -1,4 +1,5 @@
-﻿@{
+﻿@model Outfitly.Models.CheckoutViewModel
+@{
     ViewData["Title"] = "Checkout";
 }
 
@@ -29,273 +30,321 @@
 
 <!-- Checkout Content -->
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <form asp-action="ProcessOrder" method="post" id="checkoutForm">
+        @Html.AntiForgeryToken()
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <!-- Left: Checkout Form -->
-        <div class="lg:col-span-2">
+            <!-- Left: Checkout Form -->
+            <div class="lg:col-span-2">
 
-            <!-- Step 1: Shipping Address -->
-            <div id="step1" class="checkout-step bg-white border border-gray-200 rounded p-6 mb-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-medium text-black">Shipping Address</h2>
-                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 1</span>
-                </div>
-
-                <form class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">FIRST NAME *</label>
-                            <input type="text" required
-                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">LAST NAME *</label>
-                            <input type="text" required
-                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                        </div>
+                <!-- Step 1: Shipping Address -->
+                <div id="step1" class="checkout-step bg-white border border-gray-200 rounded p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-medium text-black">Shipping Address</h2>
+                        <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 1</span>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">EMAIL *</label>
-                        <input type="email" required
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                    </div>
+                    <!-- Saved Addresses Section -->
+                    @if (Model.SavedAddresses.Any())
+                    {
+                        <div class="mb-6 pb-6 border-b border-gray-200">
+                            <label class="block text-xs font-medium text-gray-700 mb-3">USE SAVED ADDRESS</label>
+                            <div class="space-y-3">
+                                <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition saved-address-option border-gray-300 hover:border-gray-400">
+                                    <input type="radio" name="SelectedAddressId" value="" checked class="mt-1 w-4 h-4 text-black">
+                                    <div class="ml-3">
+                                        <span class="text-sm font-medium text-black">Enter new address</span>
+                                    </div>
+                                </label>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">PHONE NUMBER *</label>
-                        <input type="tel" required
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 1 *</label>
-                        <input type="text" required
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 2</label>
-                        <input type="text"
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">CITY *</label>
-                            <input type="text" required
-                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                                @foreach (var address in Model.SavedAddresses)
+                                {
+                                    <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition saved-address-option border-gray-300 hover:border-gray-400" data-address-id="@address.Id">
+                                        <input type="radio" name="SelectedAddressId" value="@address.Id" class="mt-1 w-4 h-4 text-black">
+                                        <div class="ml-3">
+                                            <span class="text-sm font-medium text-black">@address.FirstName @address.LastName</span>
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                @address.AddressLine1, @address.City, @address.State @address.Zip
+                                            </p>
+                                        </div>
+                                    </label>
+                                }
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">STATE/PROVINCE *</label>
-                            <input type="text" required
-                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                        </div>
-                    </div>
+                    }
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">ZIP/POSTAL CODE *</label>
-                            <input type="text" required
-                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    <div class="space-y-4" id="addressFields">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">FIRST NAME *</label>
+                                <input type="text" asp-for="ShippingAddress.FirstName" required
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="firstName">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">LAST NAME *</label>
+                                <input type="text" asp-for="ShippingAddress.LastName" required
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="lastName">
+                            </div>
                         </div>
+
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">COUNTRY *</label>
-                            <select required
-                                    class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
-                                <option value="">Select Country</option>
-                                <option value="US">United States</option>
-                                <option value="MY">Malaysia</option>
-                                <option value="SG">Singapore</option>
-                                <option value="GB">United Kingdom</option>
-                            </select>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">EMAIL *</label>
+                            <input type="email" asp-for="ShippingAddress.Email" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="email">
                         </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">PHONE NUMBER *</label>
+                            <input type="tel" asp-for="ShippingAddress.PhoneNumber" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="phone">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 1 *</label>
+                            <input type="text" asp-for="ShippingAddress.AddressLine1" required
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="addressLine1">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-2">ADDRESS LINE 2</label>
+                            <input type="text" asp-for="ShippingAddress.AddressLine2"
+                                   class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="addressLine2">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">CITY *</label>
+                                <input type="text" asp-for="ShippingAddress.City" required
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="city">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">STATE/PROVINCE *</label>
+                                <input type="text" asp-for="ShippingAddress.StateProvince" required
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="state">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">ZIP/POSTAL CODE *</label>
+                                <input type="text" asp-for="ShippingAddress.ZipPostalCode" required
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black" id="zip">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">COUNTRY *</label>
+                                <select asp-for="ShippingAddress.Country" required id="country"
+                                        class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                                    <option value="">Select Country</option>
+                                    <option value="US">United States</option>
+                                    <option value="MY">Malaysia</option>
+                                    <option value="SG">Singapore</option>
+                                    <option value="GB">United Kingdom</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Save Address Checkbox -->
+                        @if (Model.SavedAddresses.Count < 3)
+                        {
+                            <div class="flex items-center gap-2 pt-2">
+                                <input type="checkbox" asp-for="SaveAddress" id="saveAddress"
+                                       class="w-4 h-4 text-black border-gray-300 rounded focus:ring-black">
+                                <label for="saveAddress" class="text-sm text-gray-700">Save this address for future orders</label>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-xs text-gray-500 pt-2">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                You have reached the maximum of 3 saved addresses.
+                            </p>
+                        }
                     </div>
 
                     <button type="button" id="continueToPayment"
                             class="w-full bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded mt-6">
                         CONTINUE TO PAYMENT
                     </button>
-                </form>
-            </div>
-
-            <!-- Step 2: Payment Method -->
-            <div id="step2" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-medium text-black">Payment Method</h2>
-                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 2</span>
                 </div>
 
-                <!-- Payment Options -->
-                <div class="space-y-4 mb-6">
-                    <label class="flex items-center p-4 border-2 border-black rounded cursor-pointer bg-gray-50">
-                        <input type="radio" name="payment" value="card" checked class="w-4 h-4 text-black">
-                        <span class="ml-3 text-sm font-medium text-black">Credit/Debit Card</span>
-                        <div class="ml-auto flex gap-2">
-                            <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">V</div>
-                            <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">M</div>
-                        </div>
-                    </label>
-
-                    <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
-                        <input type="radio" name="payment" value="paypal" class="w-4 h-4 text-black">
-                        <span class="ml-3 text-sm text-gray-700">PayPal</span>
-                    </label>
-
-                    <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
-                        <input type="radio" name="payment" value="bank" class="w-4 h-4 text-black">
-                        <span class="ml-3 text-sm text-gray-700">Bank Transfer</span>
-                    </label>
-                </div>
-
-                <!-- Card Details Form -->
-                <div id="cardDetails" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">CARD NUMBER *</label>
-                        <input type="text" placeholder="1234 5678 9012 3456"
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                <!-- Step 2: Payment Method -->
+                <div id="step2" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-medium text-black">Payment Method</h2>
+                        <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 2</span>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-2">CARDHOLDER NAME *</label>
-                        <input type="text"
-                               class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
+                    <!-- Payment Options -->
+                    <div class="space-y-4 mb-6">
+                        <label class="flex items-center p-4 border-2 border-black rounded cursor-pointer bg-gray-50">
+                            <input type="radio" name="PaymentInfo.PaymentMethod" value="card" checked class="w-4 h-4 text-black">
+                            <span class="ml-3 text-sm font-medium text-black">Credit/Debit Card</span>
+                            <div class="ml-auto flex gap-2">
+                                <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">V</div>
+                                <div class="w-8 h-5 bg-gray-300 rounded text-xs flex items-center justify-center">M</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
+                            <input type="radio" name="PaymentInfo.PaymentMethod" value="paypal" class="w-4 h-4 text-black">
+                            <span class="ml-3 text-sm text-gray-700">PayPal</span>
+                        </label>
+
+                        <label class="flex items-center p-4 border-2 border-gray-300 rounded cursor-pointer hover:border-gray-400">
+                            <input type="radio" name="PaymentInfo.PaymentMethod" value="bank" class="w-4 h-4 text-black">
+                            <span class="ml-3 text-sm text-gray-700">Bank Transfer</span>
+                        </label>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <!-- Card Details Form -->
+                    <div id="cardDetails" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">EXPIRY DATE *</label>
-                            <input type="text" placeholder="MM/YY"
+                            <label class="block text-xs font-medium text-gray-700 mb-2">CARD NUMBER *</label>
+                            <input type="text" asp-for="PaymentInfo.CardNumber" placeholder="1234 5678 9012 3456"
                                    class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
                         </div>
+
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-2">CVV *</label>
-                            <input type="text" placeholder="123"
+                            <label class="block text-xs font-medium text-gray-700 mb-2">CARDHOLDER NAME *</label>
+                            <input type="text" asp-for="PaymentInfo.CardholderName"
                                    class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
                         </div>
-                    </div>
-                </div>
 
-                <div class="flex gap-3 mt-6">
-                    <button type="button" id="backToShipping"
-                            class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
-                        BACK
-                    </button>
-                    <button type="button" id="continueToReview"
-                            class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
-                        CONTINUE TO REVIEW
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 3: Review Order -->
-            <div id="step3" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-lg font-medium text-black">Review Your Order</h2>
-                    <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 3</span>
-                </div>
-
-                <!-- Shipping Address Review -->
-                <div class="mb-6 pb-6 border-b border-gray-200">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xs font-medium text-black tracking-wide">SHIPPING ADDRESS</h3>
-                        <button class="text-xs text-gray-600 hover:text-black underline">Edit</button>
-                    </div>
-                    <p class="text-sm text-gray-700">
-                        John Doe<br>
-                        123 Main Street<br>
-                        New York, NY 10001<br>
-                        United States
-                    </p>
-                </div>
-
-                <!-- Payment Method Review -->
-                <div class="mb-6 pb-6 border-b border-gray-200">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xs font-medium text-black tracking-wide">PAYMENT METHOD</h3>
-                        <button class="text-xs text-gray-600 hover:text-black underline">Edit</button>
-                    </div>
-                    <p class="text-sm text-gray-700">Credit Card ending in 3456</p>
-                </div>
-
-                <!-- Order Items -->
-                <div class="mb-6">
-                    <h3 class="text-xs font-medium text-black tracking-wide mb-4">ORDER ITEMS</h3>
-                    <div class="space-y-3">
-                        <div class="flex gap-3">
-                            <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0"></div>
-                            <div class="flex-grow">
-                                <p class="text-sm text-black">Minimal Cotton Tee</p>
-                                <p class="text-xs text-gray-600">Black / M / Qty: 1</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">EXPIRY DATE *</label>
+                                <input type="text" asp-for="PaymentInfo.ExpiryDate" placeholder="MM/YY"
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
                             </div>
-                            <p class="text-sm text-black">$49.00</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0"></div>
-                            <div class="flex-grow">
-                                <p class="text-sm text-black">Tailored Linen Pants</p>
-                                <p class="text-xs text-gray-600">Blue / L / Qty: 2</p>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-2">CVV *</label>
+                                <input type="text" asp-for="PaymentInfo.CVV" placeholder="123"
+                                       class="w-full border border-gray-300 rounded px-4 py-2.5 text-sm focus:outline-none focus:border-black">
                             </div>
-                            <p class="text-sm text-black">$178.00</p>
                         </div>
                     </div>
+
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" id="backToShipping"
+                                class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
+                            BACK
+                        </button>
+                        <button type="button" id="continueToReview"
+                                class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
+                            CONTINUE TO REVIEW
+                        </button>
+                    </div>
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="button" id="backToPayment"
-                            class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
-                        BACK
-                    </button>
-                    <button type="button" id="placeOrder"
-                            class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
-                        PLACE ORDER
-                    </button>
+                <!-- Step 3: Review Order -->
+                <div id="step3" class="checkout-step hidden bg-white border border-gray-200 rounded p-6 mb-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-medium text-black">Review Your Order</h2>
+                        <span class="text-xs bg-black text-white px-3 py-1 rounded-full">STEP 3</span>
+                    </div>
+
+                    <!-- Shipping Address Review -->
+                    <div class="mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xs font-medium text-black tracking-wide">SHIPPING ADDRESS</h3>
+                            <button type="button" class="text-xs text-gray-600 hover:text-black underline" onclick="showStep(1)">Edit</button>
+                        </div>
+                        <p class="text-sm text-gray-700" id="reviewAddress">
+                            Loading...
+                        </p>
+                    </div>
+
+                    <!-- Payment Method Review -->
+                    <div class="mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xs font-medium text-black tracking-wide">PAYMENT METHOD</h3>
+                            <button type="button" class="text-xs text-gray-600 hover:text-black underline" onclick="showStep(2)">Edit</button>
+                        </div>
+                        <p class="text-sm text-gray-700" id="reviewPayment">Credit Card ending in ****</p>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-6">
+                        <h3 class="text-xs font-medium text-black tracking-wide mb-4">ORDER ITEMS</h3>
+                        <div class="space-y-3">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <div class="flex gap-3">
+                                    <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0">
+                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                        {
+                                            <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover rounded" />
+                                        }
+                                    </div>
+                                    <div class="flex-grow">
+                                        <p class="text-sm text-black">@item.ProductName</p>
+                                        <p class="text-xs text-gray-600">@item.Color / @item.Size / Qty: @item.Quantity</p>
+                                    </div>
+                                    <p class="text-sm text-black">$@item.TotalPrice.ToString("N2")</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" id="backToPayment"
+                                class="flex-1 border border-gray-300 text-black py-3 text-sm hover:bg-gray-50 transition rounded">
+                            BACK
+                        </button>
+                        <button type="submit" id="placeOrder"
+                                class="flex-1 bg-black text-white py-3 text-sm tracking-wide hover:bg-gray-800 transition rounded">
+                            PLACE ORDER
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
-        </div>
+            <!-- Right: Order Summary (Sticky) -->
+            <div class="lg:col-span-1">
+                <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
+                    <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
 
-        <!-- Right: Order Summary (Sticky) -->
-        <div class="lg:col-span-1">
-            <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
-                <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
-
-                <!-- Summary Details -->
-                <div class="space-y-3 mb-6 pb-6 border-b border-gray-200">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Subtotal</span>
-                        <span class="text-black font-medium">$356.00</span>
+                    <!-- Summary Details -->
+                    <div class="space-y-3 mb-6 pb-6 border-b border-gray-200">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="text-black font-medium">$@Model.Cart.Subtotal.ToString("N2")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Shipping</span>
+                            <span class="text-black font-medium">$@Model.Cart.Shipping.ToString("N2")</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Tax</span>
+                            <span class="text-black font-medium">$@Model.Cart.Tax.ToString("N2")</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Shipping</span>
-                        <span class="text-black font-medium">$10.00</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">Tax</span>
-                        <span class="text-black font-medium">$35.60</span>
-                    </div>
-                </div>
 
-                <!-- Total -->
-                <div class="flex justify-between items-center mb-6">
-                    <span class="text-base font-medium text-black">Total</span>
-                    <span class="text-2xl font-light text-black">$401.60</span>
-                </div>
+                    <!-- Total -->
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-base font-medium text-black">Total</span>
+                        <span class="text-2xl font-light text-black">$@Model.Cart.Total.ToString("N2")</span>
+                    </div>
 
-                <!-- Security Notice -->
-                <div class="bg-gray-50 border border-gray-200 rounded p-4">
-                    <div class="flex items-start gap-2">
-                        <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        <div>
-                            <p class="text-xs font-medium text-black mb-1">Secure Checkout</p>
-                            <p class="text-xs text-gray-600">Your payment information is encrypted and secure.</p>
+                    <!-- Security Notice -->
+                    <div class="bg-gray-50 border border-gray-200 rounded p-4">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            <div>
+                                <p class="text-xs font-medium text-black mb-1">Secure Checkout</p>
+                                <p class="text-xs text-gray-600">Your payment information is encrypted and secure.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
 
 @section Scripts {
@@ -321,17 +370,14 @@
             stepIndicators.forEach((indicator, index) => {
                 const stepNum = index + 1;
                 if (stepNum < stepNumber) {
-                    // Completed steps
                     indicator.classList.add('bg-black', 'text-white');
                     indicator.classList.remove('bg-gray-200', 'text-gray-500');
                 } else if (stepNum === stepNumber) {
-                    // Current step
                     indicator.classList.add('bg-black', 'text-white');
                     indicator.classList.remove('bg-gray-200', 'text-gray-500');
                     indicator.nextElementSibling?.classList.remove('text-gray-500');
                     indicator.nextElementSibling?.classList.add('text-black', 'font-medium');
                 } else {
-                    // Future steps
                     indicator.classList.remove('bg-black', 'text-white');
                     indicator.classList.add('bg-gray-200', 'text-gray-500');
                     indicator.nextElementSibling?.classList.add('text-gray-500');
@@ -343,14 +389,45 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Update review section
+        function updateReviewSection() {
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const address = document.getElementById('addressLine1').value;
+            const city = document.getElementById('city').value;
+            const state = document.getElementById('state').value;
+            const zip = document.getElementById('zip').value;
+            const country = document.getElementById('country').value;
+
+            document.getElementById('reviewAddress').innerHTML = `
+                ${firstName} ${lastName}<br>
+                ${address}<br>
+                ${city}, ${state} ${zip}<br>
+                ${country}
+            `;
+
+            const cardNumber = document.querySelector('[name="PaymentInfo.CardNumber"]').value;
+            const lastFour = cardNumber.slice(-4) || '****';
+            document.getElementById('reviewPayment').textContent = `Credit Card ending in ${lastFour}`;
+        }
+
         // Step 1 -> Step 2
         document.getElementById('continueToPayment').addEventListener('click', function() {
-            // Validate form fields
-            const form = document.querySelector('#step1 form');
-            if (form.checkValidity()) {
+            const form = document.getElementById('step1').querySelector('div');
+            const requiredInputs = form.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+            
+            requiredInputs.forEach(input => {
+                if (!input.value) {
+                    isValid = false;
+                    input.classList.add('border-red-500');
+                } else {
+                    input.classList.remove('border-red-500');
+                }
+            });
+
+            if (isValid) {
                 showStep(2);
-            } else {
-                form.reportValidity();
             }
         });
 
@@ -361,6 +438,7 @@
 
         // Step 2 -> Step 3
         document.getElementById('continueToReview').addEventListener('click', function() {
+            updateReviewSection();
             showStep(3);
         });
 
@@ -369,21 +447,11 @@
             showStep(2);
         });
 
-        // Place Order
-        document.getElementById('placeOrder').addEventListener('click', function() {
-            if (confirm('Confirm your order?')) {
-                alert('Order placed successfully! (This is a simulated order)');
-                // TODO: Submit order to backend
-                // window.location.href = '/Order/Confirmation';
-            }
-        });
-
         // Payment method selection
-        document.querySelectorAll('input[name="payment"]').forEach(radio => {
+        document.querySelectorAll('input[name="PaymentInfo.PaymentMethod"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                // Update border styling
                 document.querySelectorAll('label').forEach(label => {
-                    if (label.querySelector('input[name="payment"]')) {
+                    if (label.querySelector('input[name="PaymentInfo.PaymentMethod"]')) {
                         label.classList.remove('border-black', 'bg-gray-50');
                         label.classList.add('border-gray-300');
                     }
@@ -392,12 +460,42 @@
                 this.closest('label').classList.add('border-black', 'bg-gray-50');
                 this.closest('label').classList.remove('border-gray-300');
 
-                // Show/hide card details
                 const cardDetails = document.getElementById('cardDetails');
                 if (this.value === 'card') {
                     cardDetails.classList.remove('hidden');
                 } else {
                     cardDetails.classList.add('hidden');
+                }
+            });
+        });
+
+        // Saved address selection
+        document.querySelectorAll('.saved-address-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Update styling
+                document.querySelectorAll('.saved-address-option').forEach(label => {
+                    label.classList.remove('border-black', 'bg-gray-50');
+                    label.classList.add('border-gray-300');
+                });
+                this.closest('label').classList.add('border-black', 'bg-gray-50');
+                this.closest('label').classList.remove('border-gray-300');
+
+                const addressId = this.value;
+                if (addressId) {
+                    // Fetch and populate saved address
+                    fetch(`/Checkout/GetSavedAddress/${addressId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById('firstName').value = data.firstName;
+                            document.getElementById('lastName').value = data.lastName;
+                            document.getElementById('addressLine1').value = data.addressLine1;
+                            document.getElementById('addressLine2').value = data.addressLine2;
+                            document.getElementById('city').value = data.city;
+                            document.getElementById('state').value = data.state;
+                            document.getElementById('zip').value = data.zip;
+                            document.getElementById('country').value = data.country;
+                        })
+                        .catch(err => console.error('Error loading address:', err));
                 }
             });
         });
