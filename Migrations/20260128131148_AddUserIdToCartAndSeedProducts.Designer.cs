@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Outfitly.Data;
 
@@ -11,9 +12,11 @@ using Outfitly.Data;
 namespace Outfitly.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128131148_AddUserIdToCartAndSeedProducts")]
+    partial class AddUserIdToCartAndSeedProducts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -501,201 +504,6 @@ namespace Outfitly.Migrations
                             Name = "Summer Floral Dress",
                             Price = 49.99m,
                             StockQuantity = 25
-                        },
-                        new
-                        {
-                            Id = 6,
-                            AvailableColors = "Blue,Gray,Beige",
-                            AvailableSizes = "S,M,L,XL",
-                            Category = "Bottoms",
-                            CreatedAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Elegant linen pants perfect for business casual.",
-                            ImageUrl = "https://placehold.co/600x400?text=Linen+Pants",
-                            Name = "Tailored Linen Pants",
-                            Price = 89.00m,
-                            StockQuantity = 45
-                        },
-                        new
-                        {
-                            Id = 7,
-                            AvailableColors = "Brown,Black,Tan",
-                            AvailableSizes = "One Size",
-                            Category = "Accessories",
-                            CreatedAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Genuine leather crossbody bag with adjustable strap.",
-                            ImageUrl = "https://placehold.co/600x400?text=Crossbody+Bag",
-                            Name = "Leather Crossbody Bag",
-                            Price = 129.00m,
-                            StockQuantity = 20
-                        },
-                        new
-                        {
-                            Id = 8,
-                            AvailableColors = "Gray,Navy,Camel",
-                            AvailableSizes = "S,M,L",
-                            Category = "Outerwear",
-                            CreatedAt = new DateTime(2024, 1, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Timeless wool coat for the winter season.",
-                            ImageUrl = "https://placehold.co/600x400?text=Wool+Coat",
-                            Name = "Classic Wool Coat",
-                            Price = 249.00m,
-                            StockQuantity = 15
-                        },
-                        new
-                        {
-                            Id = 9,
-                            AvailableColors = "White,Pink,Cream",
-                            AvailableSizes = "XS,S,M,L",
-                            Category = "Tops",
-                            CreatedAt = new DateTime(2024, 1, 3, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Luxurious silk blend blouse for formal occasions.",
-                            ImageUrl = "https://placehold.co/600x400?text=Silk+Blouse",
-                            Name = "Silk Blend Blouse",
-                            Price = 79.00m,
-                            StockQuantity = 35
-                        },
-                        new
-                        {
-                            Id = 10,
-                            AvailableColors = "Blue,Black",
-                            AvailableSizes = "S,M,L,XL",
-                            Category = "Outerwear",
-                            CreatedAt = new DateTime(2024, 1, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Classic denim jacket that never goes out of style.",
-                            ImageUrl = "https://placehold.co/600x400?text=Denim+Jacket",
-                            Name = "Denim Jacket",
-                            Price = 119.00m,
-                            StockQuantity = 40
-                        },
-                        new
-                        {
-                            Id = 11,
-                            AvailableColors = "Black,Beige,Navy",
-                            AvailableSizes = "XS,S,M,L,XL",
-                            Category = "Bottoms",
-                            CreatedAt = new DateTime(2024, 1, 4, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Comfortable wide leg trousers with a modern silhouette.",
-                            ImageUrl = "https://placehold.co/600x400?text=Wide+Leg+Trousers",
-                            Name = "Wide Leg Trousers",
-                            Price = 95.00m,
-                            StockQuantity = 55
-                        },
-                        new
-                        {
-                            Id = 12,
-                            AvailableColors = "Cream,Gray,Black,Burgundy",
-                            AvailableSizes = "S,M,L",
-                            Category = "Tops",
-                            CreatedAt = new DateTime(2024, 1, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Ultra-soft 100% cashmere sweater for ultimate comfort.",
-                            ImageUrl = "https://placehold.co/600x400?text=Cashmere+Sweater",
-                            Name = "Cashmere Sweater",
-                            Price = 159.00m,
-                            StockQuantity = 20
-                        },
-                        new
-                        {
-                            Id = 13,
-                            AvailableColors = "Black,Brown,Cognac",
-                            AvailableSizes = "36,37,38,39,40,41",
-                            Category = "Footwear",
-                            CreatedAt = new DateTime(2024, 1, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Stylish ankle boots with comfortable block heel.",
-                            ImageUrl = "https://placehold.co/600x400?text=Ankle+Boots",
-                            Name = "Ankle Boots",
-                            Price = 189.00m,
-                            StockQuantity = 30
-                        },
-                        new
-                        {
-                            Id = 14,
-                            AvailableColors = "Black,Gray,Beige",
-                            AvailableSizes = "S,M,L,XL",
-                            Category = "Outerwear",
-                            CreatedAt = new DateTime(2024, 1, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Trendy oversized blazer for a chic look.",
-                            ImageUrl = "https://placehold.co/600x400?text=Oversized+Blazer",
-                            Name = "Oversized Blazer",
-                            Price = 199.00m,
-                            StockQuantity = 25
-                        },
-                        new
-                        {
-                            Id = 15,
-                            AvailableColors = "Black,Navy,Olive",
-                            AvailableSizes = "XS,S,M,L",
-                            Category = "Bottoms",
-                            CreatedAt = new DateTime(2024, 1, 6, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Elegant pleated midi skirt for any occasion.",
-                            ImageUrl = "https://placehold.co/600x400?text=Midi+Skirt",
-                            Name = "Pleated Midi Skirt",
-                            Price = 75.00m,
-                            StockQuantity = 40
-                        },
-                        new
-                        {
-                            Id = 16,
-                            AvailableColors = "Khaki,Black,Navy",
-                            AvailableSizes = "One Size",
-                            Category = "Accessories",
-                            CreatedAt = new DateTime(2024, 1, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Durable canvas backpack with laptop compartment.",
-                            ImageUrl = "https://placehold.co/600x400?text=Canvas+Backpack",
-                            Name = "Canvas Backpack",
-                            Price = 69.00m,
-                            StockQuantity = 50
-                        },
-                        new
-                        {
-                            Id = 17,
-                            AvailableColors = "Navy/White,Red/White,Green/White",
-                            AvailableSizes = "S,M,L,XL,XXL",
-                            Category = "Tops",
-                            CreatedAt = new DateTime(2024, 1, 7, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Classic striped polo shirt for casual weekends.",
-                            ImageUrl = "https://placehold.co/600x400?text=Polo+Shirt",
-                            Name = "Striped Polo Shirt",
-                            Price = 45.00m,
-                            StockQuantity = 60
-                        },
-                        new
-                        {
-                            Id = 18,
-                            AvailableColors = "Black,Brown",
-                            AvailableSizes = "S,M,L,XL",
-                            Category = "Accessories",
-                            CreatedAt = new DateTime(2024, 1, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Premium leather belt with silver buckle.",
-                            ImageUrl = "https://placehold.co/600x400?text=Leather+Belt",
-                            Name = "Leather Belt",
-                            Price = 55.00m,
-                            StockQuantity = 80
-                        },
-                        new
-                        {
-                            Id = 19,
-                            AvailableColors = "Burgundy,Navy,Emerald",
-                            AvailableSizes = "XS,S,M,L",
-                            Category = "Dresses",
-                            CreatedAt = new DateTime(2024, 1, 8, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Flowing wrap maxi dress perfect for evening events.",
-                            ImageUrl = "https://placehold.co/600x400?text=Maxi+Dress",
-                            Name = "Wrap Maxi Dress",
-                            Price = 129.00m,
-                            StockQuantity = 20
-                        },
-                        new
-                        {
-                            Id = 20,
-                            AvailableColors = "Black,Gray,Navy",
-                            AvailableSizes = "S,M,L,XL",
-                            Category = "Bottoms",
-                            CreatedAt = new DateTime(2024, 1, 9, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Comfortable athletic joggers for workouts or lounging.",
-                            ImageUrl = "https://placehold.co/600x400?text=Athletic+Joggers",
-                            Name = "Athletic Joggers",
-                            Price = 65.00m,
-                            StockQuantity = 70
                         });
                 });
 
@@ -729,11 +537,6 @@ namespace Outfitly.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -743,11 +546,6 @@ namespace Outfitly.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("State")
                         .IsRequired()
@@ -760,8 +558,8 @@ namespace Outfitly.Migrations
 
                     b.Property<string>("Zip")
                         .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 

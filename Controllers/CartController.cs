@@ -1,100 +1,161 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Outfitly.Data;
 using Outfitly.Models;
+using System.Security.Claims;
 
 namespace Outfitly.Controllers
 {
     public class CartController : Controller
     {
-        // GET: Cart
-        public IActionResult Index()
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+
+        public CartController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
         {
-            // TODO: Replace with actual cart data from session/database
-            var cartItems = GetSampleCartItems();
+            _context = context;
+            _userManager = userManager;
+        }
+
+        // GET: Cart
+        public async Task<IActionResult> Index()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                // For unauthenticated users, we can redirect to login or show an empty cart
+                // prompting them to login.
+                // Requirement: "If not logged in... redirect" (specifically for Add).
+                // For Index, asking for login seems appropriate for a persistent cart logic.
+                return Redirect($"/Identity/Account/Login?returnUrl={Uri.EscapeDataString("/Cart")}");
+            }
+
+            var cartItems = await _context.CartItems
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
 
             return View(cartItems);
         }
 
         // POST: Cart/Add
         [HttpPost]
-        public IActionResult Add(int productId, int quantity = 1, string? size = null, string? color = null)
+        public async Task<IActionResult> Add(int productId, int quantity = 1, string? size = null, string? color = null)
         {
-            // TODO: Implement actual cart add logic
-            // This would typically:
-            // 1. Get product details from database
-            // 2. Add to session/database cart
-            // 3. Return success response
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                // If the user is not logged in, redirect them to the Login page 
+                // Since this is likely an AJAX call, returning a JSON with redirect info or 401 is better,
+                // but the requirement "return a response that triggers the login flow" often means 
+                // returning a challenge or specific JSON.
+                // Assuming the frontend handles 401 or we return a JSON indicating requirement.
+                return Json(new { success = false, redirectUrl = "/Identity/Account/Login" });
+            }
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null)
+            {
+                return Json(new { success = false, message = "Product not found" });
+            }
+
+            // Check if item already exists for this user
+            var existingItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.UserId == userId &&
+                                          c.ProductId == productId &&
+                                          c.Size == size &&
+                                          c.Color == color);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
+                _context.Update(existingItem);
+            }
+            else
+            {
+                var newItem = new CartItem
+                {
+                    UserId = userId,
+                    ProductId = productId,
+                    ProductName = product.Name,
+                    Price = product.Price,
+                    Quantity = quantity,
+                    Size = size,
+                    Color = color,
+                    ImageUrl = product.ImageUrl
+                };
+                _context.CartItems.Add(newItem);
+            }
+
+            await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "Product added to cart" });
         }
 
         // POST: Cart/Update
         [HttpPost]
-        public IActionResult Update(int cartItemId, int quantity)
+        public async Task<IActionResult> Update(int cartItemId, int quantity)
         {
-            // TODO: Implement cart update logic
-            // Update quantity in session/database
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            return Json(new { success = true, message = "Cart updated" });
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.Id == cartItemId && c.UserId == userId);
+
+            if (cartItem != null)
+            {
+                if (quantity > 0)
+                {
+                    cartItem.Quantity = quantity;
+                    _context.Update(cartItem);
+                }
+                else
+                {
+                    _context.CartItems.Remove(cartItem);
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Cart updated" });
+            }
+
+            return Json(new { success = false, message = "Item not found" });
         }
 
         // POST: Cart/Remove
         [HttpPost]
-        public IActionResult Remove(int cartItemId)
+        public async Task<IActionResult> Remove(int cartItemId)
         {
-            // TODO: Implement cart remove logic
-            // Remove item from session/database
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            return Json(new { success = true, message = "Item removed from cart" });
+            var cartItem = await _context.CartItems
+                .FirstOrDefaultAsync(c => c.Id == cartItemId && c.UserId == userId);
+
+            if (cartItem != null)
+            {
+                _context.CartItems.Remove(cartItem);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Item removed from cart" });
+            }
+
+            return Json(new { success = false, message = "Item not found" });
         }
 
         // GET: Cart/Count
-        public IActionResult Count()
+        public async Task<IActionResult> Count()
         {
-            // TODO: Return actual cart item count
-            int count = GetSampleCartItems().Count;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            int count = 0;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                count = await _context.CartItems
+                    .Where(c => c.UserId == userId)
+                    .SumAsync(c => c.Quantity);
+            }
 
             return Json(new { count = count });
-        }
-
-        // Sample cart data for testing
-        private List<CartItem> GetSampleCartItems()
-        {
-            return new List<CartItem>
-            {
-                new CartItem
-                {
-                    Id = 1,
-                    ProductId = 1,
-                    ProductName = "Minimal Cotton Tee",
-                    Price = 49.00m,
-                    Quantity = 1,
-                    Color = "Black",
-                    Size = "M",
-                    ImageUrl = null
-                },
-                new CartItem
-                {
-                    Id = 2,
-                    ProductId = 2,
-                    ProductName = "Tailored Linen Pants",
-                    Price = 89.00m,
-                    Quantity = 2,
-                    Color = "Blue",
-                    Size = "L",
-                    ImageUrl = null
-                },
-                new CartItem
-                {
-                    Id = 3,
-                    ProductId = 3,
-                    ProductName = "Leather Crossbody Bag",
-                    Price = 129.00m,
-                    Quantity = 1,
-                    Color = "Brown",
-                    Size = "One Size",
-                    ImageUrl = null
-                }
-            };
         }
     }
 }

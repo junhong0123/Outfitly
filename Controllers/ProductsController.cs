@@ -1,41 +1,61 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Outfitly.Data;
 using Outfitly.Models;
 
 namespace Outfitly.Controllers
 {
-    public class ProductsController : Controller    
+    public class ProductsController : Controller
     {
-        // GET: Products (Product Listing Page)
-        public IActionResult Index(string? category, decimal? minPrice, decimal? maxPrice, string? sortBy)
+        private readonly ApplicationDbContext _context;
+
+        public ProductsController(ApplicationDbContext context)
         {
-            // TODO: Replace with actual database query
-            var products = GetSampleProducts();
+            _context = context;
+        }
+
+        // GET: Products (Product Listing Page)
+        public async Task<IActionResult> Index(string? category, string? size, string? color, decimal? minPrice, decimal? maxPrice, string? sortBy)
+        {
+            var query = _context.Products.AsQueryable();
 
             // Apply filters
             if (!string.IsNullOrEmpty(category))
             {
-                products = products.Where(p => p.Category.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+                query = query.Where(p => p.Category.ToLower() == category.ToLower());
+            }
+
+            if (!string.IsNullOrEmpty(size))
+            {
+                query = query.Where(p => p.AvailableSizes.Contains(size));
+            }
+
+            if (!string.IsNullOrEmpty(color))
+            {
+                query = query.Where(p => p.AvailableColors.Contains(color));
             }
 
             if (minPrice.HasValue)
             {
-                products = products.Where(p => p.Price >= minPrice.Value).ToList();
+                query = query.Where(p => p.Price >= minPrice.Value);
             }
 
             if (maxPrice.HasValue)
             {
-                products = products.Where(p => p.Price <= maxPrice.Value).ToList();
+                query = query.Where(p => p.Price <= maxPrice.Value);
             }
 
             // Apply sorting
-            products = sortBy switch
+            query = sortBy switch
             {
-                "newest" => products.OrderByDescending(p => p.Id).ToList(),
-                "price-low" => products.OrderBy(p => p.Price).ToList(),
-                "price-high" => products.OrderByDescending(p => p.Price).ToList(),
-                "popular" => products.OrderByDescending(p => p.Id).ToList(),
-                _ => products // featured (default)
+                "newest" => query.OrderByDescending(p => p.CreatedAt),
+                "price-low" => query.OrderBy(p => p.Price),
+                "price-high" => query.OrderByDescending(p => p.Price),
+                "popular" => query.OrderByDescending(p => p.Id),
+                _ => query.OrderBy(p => p.Id) // featured (default)
             };
+
+            var products = await query.ToListAsync();
 
             var viewModel = new ProductListViewModel
             {
@@ -51,10 +71,9 @@ namespace Outfitly.Controllers
         }
 
         // GET: Products/Details/5 (Product Detail Page)
-        public IActionResult Details(int id)
+        public async Task<IActionResult> Details(int id)
         {
-            // TODO: Replace with actual database query
-            var product = GetSampleProducts().FirstOrDefault(p => p.Id == id);
+            var product = await _context.Products.FindAsync(id);
 
             if (product == null)
             {
@@ -65,109 +84,11 @@ namespace Outfitly.Controllers
         }
 
         // GET: Products/Recommendations (AI Recommendations Page)
-        public IActionResult Recommendations()
+        public async Task<IActionResult> Recommendations()
         {
             // TODO: Implement AI recommendation logic
-            var products = GetSampleProducts().Take(8).ToList();
+            var products = await _context.Products.Take(8).ToListAsync();
             return View(products);
-        }
-
-        // Sample data - Replace with actual database later
-        private List<Product> GetSampleProducts()
-        {
-            return new List<Product>
-            {
-                new Product
-                {
-                    Id = 1,
-                    Name = "Minimal Cotton Tee",
-                    Price = 49.00m,
-                    Category = "tops",
-                    AvailableColors = new List<string> { "black", "white", "gray" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L", "XL" }
-                },
-                new Product
-                {
-                    Id = 2,
-                    Name = "Tailored Linen Pants",
-                    Price = 89.00m,
-                    Category = "bottoms",
-                    AvailableColors = new List<string> { "blue", "gray" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" }
-                },
-                new Product
-                {
-                    Id = 3,
-                    Name = "Leather Crossbody Bag",
-                    Price = 129.00m,
-                    Category = "accessories",
-                    AvailableColors = new List<string> { "brown", "black" },
-                    AvailableSizes = new List<string> { "One Size" }
-                },
-                new Product
-                {
-                    Id = 4,
-                    Name = "Classic Wool Coat",
-                    Price = 249.00m,
-                    Category = "outerwear",
-                    AvailableColors = new List<string> { "gray", "navy" },
-                    AvailableSizes = new List<string> { "S", "M", "L" }
-                },
-                new Product
-                {
-                    Id = 5,
-                    Name = "Silk Blend Blouse",
-                    Price = 79.00m,
-                    Category = "tops",
-                    AvailableColors = new List<string> { "white", "pink" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L" }
-                },
-                new Product
-                {
-                    Id = 6,
-                    Name = "Denim Jacket",
-                    Price = 119.00m,
-                    Category = "outerwear",
-                    AvailableColors = new List<string> { "blue", "black" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" }
-                },
-                new Product
-                {
-                    Id = 7,
-                    Name = "Wide Leg Trousers",
-                    Price = 95.00m,
-                    Category = "bottoms",
-                    AvailableColors = new List<string> { "black", "beige" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L", "XL" }
-                },
-                new Product
-                {
-                    Id = 8,
-                    Name = "Cashmere Sweater",
-                    Price = 159.00m,
-                    Category = "tops",
-                    AvailableColors = new List<string> { "cream", "gray", "black" },
-                    AvailableSizes = new List<string> { "S", "M", "L" }
-                },
-                new Product
-                {
-                    Id = 9,
-                    Name = "Ankle Boots",
-                    Price = 189.00m,
-                    Category = "accessories",
-                    AvailableColors = new List<string> { "black", "brown" },
-                    AvailableSizes = new List<string> { "36", "37", "38", "39", "40" }
-                },
-                new Product
-                {
-                    Id = 10,
-                    Name = "Oversized Blazer",
-                    Price = 199.00m,
-                    Category = "outerwear",
-                    AvailableColors = new List<string> { "black", "gray", "beige" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" }
-                }
-            };
         }
     }
 }

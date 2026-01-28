@@ -28,7 +28,7 @@ namespace Outfitly.Controllers
 
             // Get cart items for this user
             var cartItems = await _context.CartItems
-                .Where(c => c.Id.ToString().StartsWith(userId.Substring(0, 8))) // Simple cart association
+                .Where(c => c.UserId == userId)
                 .ToListAsync();
 
             // If cart is empty, redirect to cart page
@@ -83,7 +83,9 @@ namespace Outfitly.Controllers
             }
 
             // Get cart items
-            var userCartItems = await _context.CartItems.ToListAsync();
+            var userCartItems = await _context.CartItems
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
             if (!userCartItems.Any())
             {
                 TempData["Error"] = "Your cart is empty.";
@@ -256,6 +258,8 @@ namespace Outfitly.Controllers
             {
                 firstName = address.FirstName,
                 lastName = address.LastName,
+                email = address.Email,
+                phone = address.Phone,
                 addressLine1 = address.AddressLine1,
                 addressLine2 = address.AddressLine2 ?? "",
                 city = address.City,

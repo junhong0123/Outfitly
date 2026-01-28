@@ -94,7 +94,7 @@ using (var scope = app.Services.CreateScope())
             if (result.Succeeded)
             {
                 userManager.AddToRoleAsync(adminUser, "Admin").GetAwaiter().GetResult();
-                Console.WriteLine("✅ Admin user created: admin@outfitly.com / Admin@123");
+                Console.WriteLine("Admin user created: admin@outfitly.com / Admin@123");
             }
         }
     }

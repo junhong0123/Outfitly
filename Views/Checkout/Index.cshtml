@@ -413,23 +413,69 @@
 
         // Step 1 -> Step 2
         document.getElementById('continueToPayment').addEventListener('click', function() {
-            const form = document.getElementById('step1').querySelector('div');
-            const requiredInputs = form.querySelectorAll('input[required], select[required]');
+            const addressFields = document.getElementById('addressFields');
+            const requiredInputs = addressFields.querySelectorAll('input[required], select[required]');
             let isValid = true;
+            let errorMessages = [];
+            
+            // Clear previous error messages
+            const existingErrors = document.querySelectorAll('.validation-error');
+            existingErrors.forEach(el => el.remove());
             
             requiredInputs.forEach(input => {
-                if (!input.value) {
+                const errorEl = input.parentElement.querySelector('.field-error');
+                if (errorEl) errorEl.remove();
+                
+                if (!input.value.trim()) {
                     isValid = false;
                     input.classList.add('border-red-500');
+                    showFieldError(input, 'This field is required');
                 } else {
                     input.classList.remove('border-red-500');
                 }
             });
+            
+            // Validate Zip code (5 digits)
+            const zipInput = document.getElementById('zip');
+            if (zipInput.value && !/^\d{5}$/.test(zipInput.value)) {
+                isValid = false;
+                zipInput.classList.add('border-red-500');
+                showFieldError(zipInput, 'Zip code must be exactly 5 digits');
+            }
+            
+            // Validate Email format
+            const emailInput = document.getElementById('email');
+            const emailPattern = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (emailInput.value && !emailPattern.test(emailInput.value)) {
+                isValid = false;
+                emailInput.classList.add('border-red-500');
+                showFieldError(emailInput, 'Please enter a valid email address');
+            }
+            
+            // Validate Phone format (7-20 digits, spaces, dashes, plus, parentheses)
+            const phoneInput = document.getElementById('phone');
+            const phonePattern = /^[\d\s\-\+\(\)]{7,20}$/;
+            if (phoneInput.value && !phonePattern.test(phoneInput.value)) {
+                isValid = false;
+                phoneInput.classList.add('border-red-500');
+                showFieldError(phoneInput, 'Please enter a valid phone number');
+            }
 
             if (isValid) {
                 showStep(2);
+            } else {
+                // Scroll to first error
+                const firstError = addressFields.querySelector('.border-red-500');
+                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
+        
+        function showFieldError(input, message) {
+            const errorEl = document.createElement('p');
+            errorEl.className = 'field-error text-red-500 text-xs mt-1';
+            errorEl.textContent = message;
+            input.parentElement.appendChild(errorEl);
+        }
 
         // Step 2 -> Step 1
         document.getElementById('backToShipping').addEventListener('click', function() {
@@ -488,6 +534,8 @@
                         .then(data => {
                             document.getElementById('firstName').value = data.firstName;
                             document.getElementById('lastName').value = data.lastName;
+                            document.getElementById('email').value = data.email || '';
+                            document.getElementById('phone').value = data.phone || '';
                             document.getElementById('addressLine1').value = data.addressLine1;
                             document.getElementById('addressLine2').value = data.addressLine2;
                             document.getElementById('city').value = data.city;

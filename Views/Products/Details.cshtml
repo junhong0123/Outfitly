@@ -24,35 +24,43 @@
         <!-- Left: Image Gallery with Navigation -->
         <div class="relative">
             <!-- Main Image Container -->
-            <div class="relative bg-gray-100 aspect-square flex items-center justify-center rounded overflow-hidden group">
+            <div
+                class="relative bg-gray-100 aspect-square flex items-center justify-center rounded overflow-hidden group">
                 <!-- Image Slides -->
-                <div class="image-slide active absolute inset-0 flex items-center justify-center transition-opacity duration-500">
+                <div
+                    class="image-slide active absolute inset-0 flex items-center justify-center transition-opacity duration-500">
                     <span class="text-gray-400 text-sm">Product Image 1</span>
                 </div>
-                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                <div
+                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
                     <span class="text-gray-400 text-sm">Product Image 2</span>
                 </div>
-                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                <div
+                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
                     <span class="text-gray-400 text-sm">Product Image 3</span>
                 </div>
-                <div class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                <div
+                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
                     <span class="text-gray-400 text-sm">Product Image 4</span>
                 </div>
 
                 <!-- Navigation Arrows -->
-                <button id="prevImage" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
+                <button id="prevImage"
+                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
                     <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <button id="nextImage" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
+                <button id="nextImage"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-gray-100">
                     <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
 
                 <!-- Image Counter -->
-                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
+                <div
+                    class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
                     <span id="currentImageIndex">1</span> / 4
                 </div>
             </div>
@@ -83,7 +91,8 @@
                     }
                     else
                     {
-                        <text>Premium quality garment crafted with attention to detail. Perfect for everyday wear with a sophisticated touch. Made from sustainable materials for lasting comfort and style.</text>
+                        <text>Premium quality garment crafted with attention to detail. Perfect for everyday wear with a
+                            sophisticated touch. Made from sustainable materials for lasting comfort and style.</text>
                     }
                 </p>
             </div>
@@ -94,9 +103,9 @@
                 <div class="flex gap-3">
                     @foreach (var color in Model.AvailableColors)
                     {
-                        <button class="color-option w-10 h-10 rounded-full border-2 border-gray-300 hover:border-black transition @(color == "black" ? "bg-black ring-2 ring-black ring-offset-2" : color == "white" ? "bg-white" : color == "gray" ? "bg-gray-500" : color == "blue" ? "bg-blue-600" : color == "navy" ? "bg-blue-900" : color == "beige" ? "bg-amber-100" : color == "cream" ? "bg-amber-50" : color == "brown" ? "bg-yellow-700" : color == "pink" ? "bg-pink-200" : "bg-gray-400")"
-                                data-color="@color"
-                                title="@color">
+                        <button
+                            class="color-option w-10 h-10 rounded-full border-2 border-gray-300 hover:border-black transition @(color == "black" ? "bg-black ring-2 ring-black ring-offset-2" : color == "white" ? "bg-white" : color == "gray" ? "bg-gray-500" : color == "blue" ? "bg-blue-600" : color == "navy" ? "bg-blue-900" : color == "beige" ? "bg-amber-100" : color == "cream" ? "bg-amber-50" : color == "brown" ? "bg-yellow-700" : color == "pink" ? "bg-pink-200" : "bg-gray-400")"
+                            data-color="@color" title="@color">
                         </button>
                     }
                 </div>
@@ -111,7 +120,8 @@
                 <div class="grid grid-cols-5 gap-2">
                     @foreach (var size in Model.AvailableSizes)
                     {
-                        <button class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">
+                        <button
+                            class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">
                             @size
                         </button>
                     }
@@ -125,7 +135,8 @@
                         <h3 class="text-xs font-medium text-black mb-2 tracking-wide">QUANTITY</h3>
                         <div class="flex items-center border border-gray-300 w-32">
                             <button id="decreaseQty" class="px-4 py-2 hover:bg-gray-100 transition">-</button>
-                            <input type="number" id="quantity" value="1" min="1" class="w-full text-center border-x border-gray-300 py-2 focus:outline-none">
+                            <input type="number" id="quantity" value="1" min="1"
+                                class="w-full text-center border-x border-gray-300 py-2 focus:outline-none">
                             <button id="increaseQty" class="px-4 py-2 hover:bg-gray-100 transition">+</button>
                         </div>
                     </div>
@@ -138,12 +149,15 @@
 
             <!-- Add to Cart Button -->
             <div class="border-t border-gray-200 pt-6">
-                <button id="addToCartBtn" class="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-800 transition mb-3">
+                <button id="addToCartBtn"
+                    class="w-full bg-black text-white py-4 text-sm tracking-wide hover:bg-gray-800 transition mb-3">
                     ADD TO CART
                 </button>
-                <button class="w-full border border-gray-300 text-black py-4 text-sm tracking-wide hover:bg-gray-50 transition flex items-center justify-center gap-2">
+                <button
+                    class="w-full border border-gray-300 text-black py-4 text-sm tracking-wide hover:bg-gray-50 transition flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                     <span>ADD TO WISHLIST</span>
                 </button>
@@ -154,7 +168,8 @@
                 <details class="group">
                     <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
                         <span>PRODUCT DETAILS</span>
-                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </summary>
@@ -171,7 +186,8 @@
                 <details class="group border-t border-gray-200 pt-4">
                     <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
                         <span>SHIPPING & RETURNS</span>
-                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </summary>
@@ -183,7 +199,8 @@
                 <details class="group border-t border-gray-200 pt-4">
                     <summary class="flex justify-between items-center cursor-pointer text-sm font-medium text-black">
                         <span>CARE INSTRUCTIONS</span>
-                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 transition-transform group-open:rotate-180" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </summary>
@@ -206,7 +223,8 @@
             </div>
             <div class="flex items-center gap-2 text-amber-900 bg-amber-100 px-4 py-2 rounded">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <span class="text-xs font-medium">AI SELECTED</span>
             </div>
@@ -218,10 +236,13 @@
 
                 <!-- Recommendation Card 1 -->
                 <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
-                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    class="flex-shrink-0 w-64 group cursor-pointer">
                     <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
-                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product
+                            Image</span>
+                        <div
+                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300">
+                        </div>
                     </div>
                     <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
                     <p class="text-xs text-gray-600">$89.00</p>
@@ -229,10 +250,13 @@
 
                 <!-- Recommendation Card 2 -->
                 <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
-                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    class="flex-shrink-0 w-64 group cursor-pointer">
                     <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
-                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product
+                            Image</span>
+                        <div
+                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300">
+                        </div>
                     </div>
                     <h3 class="text-sm font-light text-black mb-1">Leather Crossbody Bag</h3>
                     <p class="text-xs text-gray-600">$129.00</p>
@@ -240,10 +264,13 @@
 
                 <!-- Recommendation Card 3 -->
                 <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="9"
-                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    class="flex-shrink-0 w-64 group cursor-pointer">
                     <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
-                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product
+                            Image</span>
+                        <div
+                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300">
+                        </div>
                     </div>
                     <h3 class="text-sm font-light text-black mb-1">Ankle Boots</h3>
                     <p class="text-xs text-gray-600">$189.00</p>
@@ -251,10 +278,13 @@
 
                 <!-- Recommendation Card 4 -->
                 <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="10"
-                   class="flex-shrink-0 w-64 group cursor-pointer">
+                    class="flex-shrink-0 w-64 group cursor-pointer">
                     <div class="bg-gray-200 aspect-[3/4] mb-3 relative overflow-hidden rounded">
-                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                        <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product
+                            Image</span>
+                        <div
+                            class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300">
+                        </div>
                     </div>
                     <h3 class="text-sm font-light text-black mb-1">Oversized Blazer</h3>
                     <p class="text-xs text-gray-600">$199.00</p>
@@ -301,20 +331,20 @@
         }
 
         // Next image button
-        document.getElementById('nextImage').addEventListener('click', function() {
+        document.getElementById('nextImage').addEventListener('click', function () {
             currentImageIndex = (currentImageIndex + 1) % totalImages;
             showImage(currentImageIndex);
         });
 
         // Previous image button
-        document.getElementById('prevImage').addEventListener('click', function() {
+        document.getElementById('prevImage').addEventListener('click', function () {
             currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
             showImage(currentImageIndex);
         });
 
         // Dot indicators click
         dotIndicators.forEach((dot, index) => {
-            dot.addEventListener('click', function() {
+            dot.addEventListener('click', function () {
                 currentImageIndex = index;
                 showImage(currentImageIndex);
             });
@@ -322,7 +352,7 @@
 
         // Color selection
         document.querySelectorAll('.color-option').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 // Remove selection from all colors
                 document.querySelectorAll('.color-option').forEach(b => {
                     b.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
@@ -334,7 +364,7 @@
 
         // Size selection
         document.querySelectorAll('.size-option').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 // Remove selection from all sizes
                 document.querySelectorAll('.size-option').forEach(b => {
                     b.classList.remove('bg-black', 'text-white', 'border-black');
@@ -351,33 +381,110 @@
         const decreaseBtn = document.getElementById('decreaseQty');
         const increaseBtn = document.getElementById('increaseQty');
 
-        decreaseBtn.addEventListener('click', function() {
+        decreaseBtn.addEventListener('click', function () {
             const currentValue = parseInt(quantityInput.value);
             if (currentValue > 1) {
                 quantityInput.value = currentValue - 1;
             }
         });
 
-        increaseBtn.addEventListener('click', function() {
+        increaseBtn.addEventListener('click', function () {
             const currentValue = parseInt(quantityInput.value);
             quantityInput.value = currentValue + 1;
         });
 
         // Add to cart
-        document.getElementById('addToCartBtn').addEventListener('click', function() {
+        document.getElementById('addToCartBtn').addEventListener('click', async function () {
             const selectedColor = document.querySelector('.color-option.ring-2')?.dataset.color;
             const selectedSize = document.querySelector('.size-option.bg-black')?.textContent.trim();
-            const quantity = quantityInput.value;
+            const quantity = parseInt(quantityInput.value);
 
             if (!selectedSize) {
-                alert('Please select a size');
+                showToast('Please select a size', 'error');
                 return;
             }
 
-            alert(`Added to cart:\nProduct: @Model.Name\nColor: ${selectedColor || 'Default'}\nSize: ${selectedSize}\nQuantity: ${quantity}`);
+            this.disabled = true;
+            this.textContent = 'ADDING...';
 
-            // TODO: Implement actual cart functionality
-            // Update cart counter in navigation
+            try {
+                const response = await fetch('/Cart/Add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `productId=@Model.Id&quantity=${quantity}&size=${encodeURIComponent(selectedSize)}&color=${encodeURIComponent(selectedColor || '')}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Successfully added to cart!', 'success');
+                    updateCartCount(quantity);
+                } else if (result.redirectUrl) {
+                    // User needs to login
+                    if (confirm('Please login to add items to your cart. Go to login page?')) {
+                        window.location.href = result.redirectUrl;
+                    }
+                } else {
+                    showToast(result.message || 'Failed to add to cart', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                this.disabled = false;
+                this.textContent = 'ADD TO CART';
+            }
         });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            // Remove existing toast if any
+            const existingToast = document.getElementById('toast-notification');
+            if (existingToast) existingToast.remove();
+
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-600' : 'bg-red-600';
+            const icon = isSuccess
+                ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
+                : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+
+            const toast = document.createElement('div');
+            toast.id = 'toast-notification';
+            toast.className = `fixed top-20 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-3 z-[100] transform translate-x-full transition-transform duration-300`;
+            toast.innerHTML = `${icon}<span class="font-medium">${message}</span>`;
+
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+                toast.classList.add('translate-x-0');
+            }, 10);
+
+            // Animate out and remove
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0');
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Update cart count with max 99 cap
+        function updateCartCount(addedQty) {
+            const cartCountEl = document.getElementById('cart-count');
+            if (cartCountEl) {
+                let currentCount = parseInt(cartCountEl.textContent) || 0;
+                let newCount = currentCount + addedQty;
+                // Cap at 99
+                if (newCount > 99) newCount = 99;
+                cartCountEl.textContent = newCount;
+
+                // Add a little animation
+                cartCountEl.classList.add('scale-125');
+                setTimeout(() => cartCountEl.classList.remove('scale-125'), 200);
+            }
+        }
     </script>
 }

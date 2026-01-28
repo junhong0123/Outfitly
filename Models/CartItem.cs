@@ -11,6 +11,7 @@ namespace Outfitly.Models
         public string? Color { get; set; }
         public string? Size { get; set; }
         public string? ImageUrl { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         // Calculate total price for this item
         public decimal TotalPrice => Price * Quantity;
