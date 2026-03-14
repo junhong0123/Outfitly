@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -84,7 +84,7 @@ namespace Outfitly.Controllers
                     Quantity = quantity,
                     Size = size,
                     Color = color,
-                    ImageUrl = product.ImageUrl
+                    ImageUrl = product.ImageUrls?.FirstOrDefault()
                 };
                 _context.CartItems.Add(newItem);
             }

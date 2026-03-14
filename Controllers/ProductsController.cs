@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Outfitly.Data;
 using Outfitly.Models;
@@ -27,12 +27,12 @@ namespace Outfitly.Controllers
 
             if (!string.IsNullOrEmpty(size))
             {
-                query = query.Where(p => p.AvailableSizes.Contains(size));
+                query = query.Where(p => p.ProductSizes.Any(s => s.Size == size && s.Quantity > 0));
             }
 
-            if (!string.IsNullOrEmpty(color))
+            if (!string.IsNullOrEmpty(color) && Enum.TryParse<Color>(color, true, out var colorEnum))
             {
-                query = query.Where(p => p.AvailableColors.Contains(color));
+                query = query.Where(p => p.AvailableColors.Contains(colorEnum));
             }
 
             if (minPrice.HasValue)

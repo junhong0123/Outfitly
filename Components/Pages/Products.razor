@@ -1,6 +1,7 @@
 @page "/Admin/Products"
 @attribute [Authorize(Roles = "Admin")]
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IWebHostEnvironment Environment
 
 <PageTitle>Products - Admin</PageTitle>
 
@@ -39,6 +40,10 @@
                 <option value="Clothing">Clothing</option>
                 <option value="Accessories">Accessories</option>
                 <option value="Footwear">Footwear</option>
+                <option value="Tops">Tops</option>
+                <option value="Bottoms">Bottoms</option>
+                <option value="Outerwear">Outerwear</option>
+                <option value="Dresses">Dresses</option>
             </select>
         </div>
     </div>
@@ -51,9 +56,9 @@
                 class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition group">
                 <!-- Product Image -->
                 <div class="aspect-square bg-gray-100 dark:bg-gray-700 relative">
-                    @if (!string.IsNullOrEmpty(product.ImageUrl))
+                    @if (product.ImageUrls != null && product.ImageUrls.Any())
                     {
-                        <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-full object-cover" />
+                        <img src="@product.ImageUrls.First()" alt="@product.Name" class="w-full h-full object-cover" />
                     }
                     else
                     {
@@ -85,11 +90,11 @@
                     </div>
 
                     <!-- Stock Badge -->
-                    @if (product.StockQuantity < 10)
+                    @if (product.TotalQuantity < 10)
                     {
                         <div class="absolute top-2 left-2">
                             <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                Low Stock: @product.StockQuantity
+                                Low Stock: @product.TotalQuantity
                             </span>
                         </div>
                     }
@@ -102,7 +107,7 @@
                     <div class="flex items-center justify-between mt-2">
                         <span
                             class="text-lg font-semibold text-gray-900 dark:text-white">$@product.Price.ToString("N2")</span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Stock: @product.StockQuantity</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Stock: @product.TotalQuantity</span>
                     </div>
                 </div>
             </div>
@@ -147,8 +152,7 @@
             <div class="p-6 space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name
-                            *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Name *</label>
                         <input type="text" @bind="_editProduct.Name"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
                     </div>
@@ -160,13 +164,6 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stock Quantity
-                            *</label>
-                        <input type="number" @bind="_editProduct.StockQuantity"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                    </div>
-
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
                         <select @bind="_editProduct.Category"
                             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
@@ -174,13 +171,11 @@
                             <option value="Clothing">Clothing</option>
                             <option value="Accessories">Accessories</option>
                             <option value="Footwear">Footwear</option>
+                            <option value="Tops">Tops</option>
+                            <option value="Bottoms">Bottoms</option>
+                            <option value="Outerwear">Outerwear</option>
+                            <option value="Dresses">Dresses</option>
                         </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
-                        <input type="text" @bind="_editProduct.ImageUrl"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
                     </div>
 
                     <div class="md:col-span-2">
@@ -189,19 +184,58 @@
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Available Colors
-                            (comma-separated)</label>
-                        <input type="text" @bind="_colorsInput" placeholder="Black, White, Blue"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Colors</label>
+                        <div class="flex flex-wrap gap-4">
+                            @foreach (var color in Enum.GetValues<Color>())
+                            {
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked="@_editProduct.AvailableColors.Contains(color)" 
+                                           @onchange="@(e => ToggleColor(color, e.Value))" 
+                                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">@color</span>
+                                </label>
+                            }
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Available Sizes
-                            (comma-separated)</label>
-                        <input type="text" @bind="_sizesInput" placeholder="S, M, L, XL"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Product Sizes & Quantities</label>
+                        @foreach (var ps in _editProduct.ProductSizes.ToList())
+                        {
+                            <div class="flex gap-2 mb-2 items-center">
+                                <input type="text" @bind="ps.Size" placeholder="Size (e.g., S)" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                                <input type="number" @bind="ps.Quantity" placeholder="Qty" class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                                <button type="button" @onclick="() => RemoveSize(ps)" class="p-2 text-red-500 hover:text-red-700 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
+                        }
+                        <button type="button" @onclick="AddSize" class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                            + Add Size
+                        </button>
                     </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product Images</label>
+                        <InputFile multiple OnChange="HandleFileSelected" accept="image/*" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        
+                        @if (_editProduct.ImageUrls.Any())
+                        {
+                            <div class="flex gap-2 mt-4 flex-wrap">
+                                @foreach (var url in _editProduct.ImageUrls)
+                                {
+                                    <div class="relative group">
+                                        <img src="@url" class="w-20 h-20 object-cover rounded border border-gray-200" />
+                                        <button type="button" @onclick="() => RemoveImage(url)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
                 </div>
             </div>
 
@@ -211,9 +245,9 @@
                     class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                     Cancel
                 </button>
-                <button @onclick="SaveProduct"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                    @(_isEditing ? "Update Product" : "Add Product")
+                <button @onclick="SaveProduct" disabled="@_isSaving"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50">
+                    @(_isSaving ? "Saving..." : (_isEditing ? "Update Product" : "Add Product"))
                 </button>
             </div>
         </div>
@@ -228,9 +262,10 @@
 
     private bool _showModal = false;
     private bool _isEditing = false;
+    private bool _isSaving = false;
     private Product _editProduct = new();
-    private string _colorsInput = "";
-    private string _sizesInput = "";
+    
+    private IReadOnlyList<IBrowserFile>? _selectedFiles;
 
     protected override async Task OnInitializedAsync()
     {
@@ -240,7 +275,7 @@
     private async Task LoadProducts()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        _products = await context.Products.OrderByDescending(p => p.CreatedAt).ToListAsync();
+        _products = await context.Products.Include(p => p.ProductSizes).OrderByDescending(p => p.CreatedAt).ToListAsync();
         _filteredProducts = _products;
     }
 
@@ -271,9 +306,14 @@
     private void OpenAddModal()
     {
         _isEditing = false;
-        _editProduct = new Product { CreatedAt = DateTime.Now };
-        _colorsInput = "";
-        _sizesInput = "";
+        _editProduct = new Product 
+        { 
+            CreatedAt = DateTime.Now,
+            ImageUrls = new List<string>(),
+            AvailableColors = new List<Color>(),
+            ProductSizes = new List<ProductSize>()
+        };
+        _selectedFiles = null;
         _showModal = true;
     }
 
@@ -285,16 +325,14 @@
             Id = product.Id,
             Name = product.Name,
             Price = product.Price,
-            StockQuantity = product.StockQuantity,
             Category = product.Category,
-            ImageUrl = product.ImageUrl,
+            ImageUrls = product.ImageUrls?.ToList() ?? new List<string>(),
             Description = product.Description,
-            AvailableColors = product.AvailableColors,
-            AvailableSizes = product.AvailableSizes,
+            AvailableColors = product.AvailableColors?.ToList() ?? new List<Color>(),
+            ProductSizes = product.ProductSizes?.Select(s => new ProductSize { Id = s.Id, ProductId = s.ProductId, Size = s.Size, Quantity = s.Quantity }).ToList() ?? new List<ProductSize>(),
             CreatedAt = product.CreatedAt
         };
-        _colorsInput = string.Join(", ", product.AvailableColors);
-        _sizesInput = string.Join(", ", product.AvailableSizes);
+        _selectedFiles = null;
         _showModal = true;
     }
 
@@ -303,38 +341,114 @@
         _showModal = false;
     }
 
+    private void ToggleColor(Color color, object? value)
+    {
+        bool isChecked = value is bool b && b;
+        if (isChecked && !_editProduct.AvailableColors.Contains(color))
+        {
+            _editProduct.AvailableColors.Add(color);
+        }
+        else if (!isChecked && _editProduct.AvailableColors.Contains(color))
+        {
+            _editProduct.AvailableColors.Remove(color);
+        }
+    }
+
+    private void AddSize()
+    {
+        _editProduct.ProductSizes.Add(new ProductSize { Size = "", Quantity = 0 });
+    }
+
+    private void RemoveSize(ProductSize size)
+    {
+        _editProduct.ProductSizes.Remove(size);
+    }
+
+    private void RemoveImage(string url)
+    {
+        _editProduct.ImageUrls.Remove(url);
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFiles = e.GetMultipleFiles(20);
+    }
+
     private async Task SaveProduct()
     {
-        _editProduct.AvailableColors = _colorsInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
-        .Select(c => c.Trim()).ToList();
-        _editProduct.AvailableSizes = _sizesInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
-        .Select(s => s.Trim()).ToList();
-
-        await using var context = await DbFactory.CreateDbContextAsync();
-
-        if (_isEditing)
+        if (string.IsNullOrWhiteSpace(_editProduct.Name) || string.IsNullOrWhiteSpace(_editProduct.Category))
         {
-            var existing = await context.Products.FindAsync(_editProduct.Id);
-            if (existing != null)
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        try 
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+
+            // Process image uploads
+            if (_selectedFiles != null && _selectedFiles.Any())
             {
-                existing.Name = _editProduct.Name;
-                existing.Price = _editProduct.Price;
-                existing.StockQuantity = _editProduct.StockQuantity;
-                existing.Category = _editProduct.Category;
-                existing.ImageUrl = _editProduct.ImageUrl;
-                existing.Description = _editProduct.Description;
-                existing.AvailableColors = _editProduct.AvailableColors;
-                existing.AvailableSizes = _editProduct.AvailableSizes;
-            }
-        }
-        else
-        {
-            context.Products.Add(_editProduct);
-        }
+                var categoryDir = _editProduct.Category.Replace(" ", "");
+                var productDir = string.Join("_", _editProduct.Name.Split(Path.GetInvalidFileNameChars())).Replace(" ", "-");
+                var relativePath = $"ProductImage/{categoryDir}/{productDir}";
+                var folderPath = Path.Combine(Environment.WebRootPath, relativePath);
+                
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
 
-        await context.SaveChangesAsync();
-        await LoadProducts();
-        CloseModal();
+                int index = _editProduct.ImageUrls.Count + 1;
+                foreach (var file in _selectedFiles)
+                {
+                    var fileName = $"image{index}.jpg";
+                    var filePath = Path.Combine(folderPath, fileName);
+                    
+                    await using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.OpenReadStream(10 * 1024 * 1024).CopyToAsync(stream);
+                    
+                    _editProduct.ImageUrls.Add($"/{relativePath}/{fileName}");
+                    index++;
+                }
+            }
+
+            if (_isEditing)
+            {
+                var existing = await context.Products.Include(p => p.ProductSizes).FirstOrDefaultAsync(p => p.Id == _editProduct.Id);
+                if (existing != null)
+                {
+                    existing.Name = _editProduct.Name;
+                    existing.Price = _editProduct.Price;
+                    existing.Category = _editProduct.Category;
+                    existing.ImageUrls = _editProduct.ImageUrls;
+                    existing.Description = _editProduct.Description;
+                    existing.AvailableColors = _editProduct.AvailableColors;
+                    
+                    // Update Sizes
+                    context.ProductSizes.RemoveRange(existing.ProductSizes);
+                    foreach(var ps in _editProduct.ProductSizes)
+                    {
+                        existing.ProductSizes.Add(new ProductSize { Size = ps.Size, Quantity = ps.Quantity });
+                    }
+                }
+            }
+            else
+            {
+                context.Products.Add(_editProduct);
+            }
+
+            await context.SaveChangesAsync();
+            await LoadProducts();
+            CloseModal();
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
     }
 
     private async Task DeleteProduct(int id)

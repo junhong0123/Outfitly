@@ -220,7 +220,9 @@
         // Load real data from database
         _ordersCount = await context.Orders.CountAsync();
         _productsCount = await context.Products.CountAsync();
-        _lowStockCount = await context.Products.CountAsync(p => p.StockQuantity < 10);
+        _lowStockCount = await context.Products
+            .Where(p => p.ProductSizes.Sum(s => s.Quantity) < 10)
+            .CountAsync();
         _totalRevenue = await context.Orders.SumAsync(o => (decimal?)o.Total) ?? 0;
         _usersCount = await context.Users.CountAsync();
 

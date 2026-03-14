@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -167,11 +167,12 @@ namespace Outfitly.Controllers
                     };
                     _context.OrderItems.Add(orderItem);
 
-                    // Deduct stock from Product
-                    var product = await _context.Products.FindAsync(cartItem.ProductId);
-                    if (product != null)
+                    // Deduct stock from ProductSize
+                    var productSize = await _context.ProductSizes
+                        .FirstOrDefaultAsync(ps => ps.ProductId == cartItem.ProductId && ps.Size == cartItem.Size);
+                    if (productSize != null)
                     {
-                        product.StockQuantity = Math.Max(0, product.StockQuantity - cartItem.Quantity);
+                        productSize.Quantity = Math.Max(0, productSize.Quantity - cartItem.Quantity);
                     }
                 }
 

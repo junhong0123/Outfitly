@@ -1,4 +1,4 @@
-﻿@using Outfitly.Models
+@using Outfitly.Models
 @model Product
 @{
     ViewData["Title"] = Model.Name;
@@ -27,22 +27,25 @@
             <div
                 class="relative bg-gray-100 aspect-square flex items-center justify-center rounded overflow-hidden group">
                 <!-- Image Slides -->
-                <div
-                    class="image-slide active absolute inset-0 flex items-center justify-center transition-opacity duration-500">
-                    <span class="text-gray-400 text-sm">Product Image 1</span>
-                </div>
-                <div
-                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
-                    <span class="text-gray-400 text-sm">Product Image 2</span>
-                </div>
-                <div
-                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
-                    <span class="text-gray-400 text-sm">Product Image 3</span>
-                </div>
-                <div
-                    class="image-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
-                    <span class="text-gray-400 text-sm">Product Image 4</span>
-                </div>
+                <!-- Image Slides -->
+                @if (Model.ImageUrls != null && Model.ImageUrls.Any())
+                {
+                    var i = 0;
+                    foreach (var img in Model.ImageUrls)
+                    {
+                        var cls = i == 0 ? "active opacity-100" : "opacity-0";
+                        <div class="image-slide @cls absolute inset-0 flex items-center justify-center transition-opacity duration-500">
+                            <img src="@img" alt="@Model.Name" class="w-full h-full object-cover rounded" />
+                        </div>
+                        i++;
+                    }
+                }
+                else
+                {
+                    <div class="image-slide active opacity-100 absolute inset-0 flex items-center justify-center transition-opacity duration-500 bg-gray-200">
+                        <span class="text-gray-400 text-sm">No Image</span>
+                    </div>
+                }
 
                 <!-- Navigation Arrows -->
                 <button id="prevImage"
@@ -61,16 +64,20 @@
                 <!-- Image Counter -->
                 <div
                     class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-xs">
-                    <span id="currentImageIndex">1</span> / 4
+                    <span id="currentImageIndex">1</span> / @(Model.ImageUrls?.Count ?? 1)
                 </div>
             </div>
 
             <!-- Thumbnail Dots -->
             <div class="flex justify-center gap-2 mt-4">
-                <button class="dot-indicator w-2 h-2 rounded-full bg-black" data-index="0"></button>
-                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="1"></button>
-                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="2"></button>
-                <button class="dot-indicator w-2 h-2 rounded-full bg-gray-300" data-index="3"></button>
+                @if (Model.ImageUrls != null)
+                {
+                    for (int i = 0; i < Model.ImageUrls.Count; i++)
+                    {
+                        var dotCls = i == 0 ? "bg-black" : "bg-gray-300";
+                        <button class="dot-indicator w-2 h-2 rounded-full @dotCls" data-index="@i"></button>
+                    }
+                }
             </div>
         </div>
 
@@ -101,8 +108,9 @@
             <div class="border-t border-gray-200 pt-6">
                 <h3 class="text-xs font-medium text-black mb-3 tracking-wide">COLOR</h3>
                 <div class="flex gap-3">
-                    @foreach (var color in Model.AvailableColors)
+                    @foreach (var c in Model.AvailableColors)
                     {
+                        var color = c.ToString().ToLower();
                         <button
                             class="color-option w-10 h-10 rounded-full border-2 border-gray-300 hover:border-black transition @(color == "black" ? "bg-black ring-2 ring-black ring-offset-2" : color == "white" ? "bg-white" : color == "gray" ? "bg-gray-500" : color == "blue" ? "bg-blue-600" : color == "navy" ? "bg-blue-900" : color == "beige" ? "bg-amber-100" : color == "cream" ? "bg-amber-50" : color == "brown" ? "bg-yellow-700" : color == "pink" ? "bg-pink-200" : "bg-gray-400")"
                             data-color="@color" title="@color">
@@ -118,7 +126,7 @@
                     <button class="text-xs text-gray-600 hover:text-black underline">Size Guide</button>
                 </div>
                 <div class="grid grid-cols-5 gap-2">
-                    @foreach (var size in Model.AvailableSizes)
+                    @foreach (var size in Model.ProductSizes?.Select(s => s.Size).Distinct() ?? Enumerable.Empty<string>())
                     {
                         <button
                             class="size-option border border-gray-300 py-3 text-sm text-gray-700 hover:border-black hover:text-black transition">
@@ -142,7 +150,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-xs text-gray-600 mb-1">AVAILABILITY</p>
-                        <p class="text-sm text-green-600 font-medium">In Stock</p>
+                        <p class="text-sm text-green-600 font-medium">@(Model.TotalQuantity > 0 ? $"In Stock ({Model.TotalQuantity})" : "Out of Stock")</p>
                     </div>
                 </div>
             </div>
@@ -299,7 +307,7 @@
     <script>
         // Image gallery navigation
         let currentImageIndex = 0;
-        const totalImages = 4;
+        const totalImages = @(Model.ImageUrls?.Count ?? 1);
         const imageSlides = document.querySelectorAll('.image-slide');
         const currentImageCounter = document.getElementById('currentImageIndex');
         const dotIndicators = document.querySelectorAll('.dot-indicator');

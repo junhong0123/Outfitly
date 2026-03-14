@@ -13,6 +13,7 @@ namespace Outfitly.Data
 
         public DbSet<CartItem> CartItems { get; set; } = default!;
         public DbSet<Product> Products { get; set; } = default!;
+        public DbSet<ProductSize> ProductSizes { get; set; } = default!;
         public DbSet<Order> Orders { get; set; } = default!;
         public DbSet<OrderItem> OrderItems { get; set; } = default!;
         public DbSet<SavedAddress> SavedAddresses { get; set; } = default!;
@@ -28,15 +29,15 @@ namespace Outfitly.Data
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Configure Product -> Colors/Sizes as JSON (for EF Core 9)
+            // Configure Product -> Colors/Images as strings
             modelBuilder.Entity<Product>()
                 .Property(p => p.AvailableColors)
                 .HasConversion(
-                    v => string.Join(',', v),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                    v => string.Join(',', v.Select(c => c.ToString())),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(c => Enum.Parse<Color>(c)).ToList());
 
             modelBuilder.Entity<Product>()
-                .Property(p => p.AvailableSizes)
+                .Property(p => p.ImageUrls)
                 .HasConversion(
                     v => string.Join(',', v),
                     v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
@@ -50,10 +51,8 @@ namespace Outfitly.Data
                     Description = "A premium quality cotton t-shirt for everyday wear.",
                     Price = 29.99m,
                     Category = "Tops",
-                    AvailableColors = new List<string> { "White", "Black", "Gray" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 100,
-                    ImageUrl = "https://placehold.co/600x400?text=White+Tee",
+                    AvailableColors = new List<Color> { Color.White, Color.Black, Color.Gray },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=White+Tee" },
                     CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Product
@@ -63,10 +62,8 @@ namespace Outfitly.Data
                     Description = "Comfortable slim fit jeans with a modern look.",
                     Price = 59.99m,
                     Category = "Bottoms",
-                    AvailableColors = new List<string> { "Blue", "Black" },
-                    AvailableSizes = new List<string> { "30", "32", "34", "36" },
-                    StockQuantity = 50,
-                    ImageUrl = "https://placehold.co/600x400?text=Jeans",
+                    AvailableColors = new List<Color> { Color.Blue, Color.Black },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Jeans" },
                     CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Product
@@ -76,10 +73,8 @@ namespace Outfitly.Data
                     Description = "Perfect for chilly evenings, this jacket is both stylish and functional.",
                     Price = 89.99m,
                     Category = "Outerwear",
-                    AvailableColors = new List<string> { "Navy", "Olive" },
-                    AvailableSizes = new List<string> { "M", "L", "XL" },
-                    StockQuantity = 30,
-                    ImageUrl = "https://placehold.co/600x400?text=Jacket",
+                    AvailableColors = new List<Color> { Color.Navy, Color.Olive },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Jacket" },
                     CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Product
@@ -89,10 +84,8 @@ namespace Outfitly.Data
                     Description = "High-performance running shoes with excellent cushioning.",
                     Price = 79.99m,
                     Category = "Footwear",
-                    AvailableColors = new List<string> { "Red", "Blue", "White" },
-                    AvailableSizes = new List<string> { "8", "9", "10", "11" },
-                    StockQuantity = 40,
-                    ImageUrl = "https://placehold.co/600x400?text=Sneakers",
+                    AvailableColors = new List<Color> { Color.Red, Color.Blue, Color.White },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Sneakers" },
                     CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Product
@@ -102,10 +95,8 @@ namespace Outfitly.Data
                     Description = "A breezy and beautiful dress for summer outings.",
                     Price = 49.99m,
                     Category = "Dresses",
-                    AvailableColors = new List<string> { "Pink", "Yellow" },
-                    AvailableSizes = new List<string> { "XS", "S", "M" },
-                    StockQuantity = 25,
-                    ImageUrl = "https://placehold.co/600x400?text=Summer+Dress",
+                    AvailableColors = new List<Color> { Color.Pink, Color.Yellow },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Summer+Dress" },
                     CreatedAt = new DateTime(2024, 1, 1)
                 },
                 new Product
@@ -115,10 +106,8 @@ namespace Outfitly.Data
                     Description = "Elegant linen pants perfect for business casual.",
                     Price = 89.00m,
                     Category = "Bottoms",
-                    AvailableColors = new List<string> { "Blue", "Gray", "Beige" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 45,
-                    ImageUrl = "https://placehold.co/600x400?text=Linen+Pants",
+                    AvailableColors = new List<Color> { Color.Blue, Color.Gray, Color.Beige },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Linen+Pants" },
                     CreatedAt = new DateTime(2024, 1, 2)
                 },
                 new Product
@@ -128,10 +117,8 @@ namespace Outfitly.Data
                     Description = "Genuine leather crossbody bag with adjustable strap.",
                     Price = 129.00m,
                     Category = "Accessories",
-                    AvailableColors = new List<string> { "Brown", "Black", "Tan" },
-                    AvailableSizes = new List<string> { "One Size" },
-                    StockQuantity = 20,
-                    ImageUrl = "https://placehold.co/600x400?text=Crossbody+Bag",
+                    AvailableColors = new List<Color> { Color.Brown, Color.Black, Color.Tan },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Crossbody+Bag" },
                     CreatedAt = new DateTime(2024, 1, 2)
                 },
                 new Product
@@ -141,10 +128,8 @@ namespace Outfitly.Data
                     Description = "Timeless wool coat for the winter season.",
                     Price = 249.00m,
                     Category = "Outerwear",
-                    AvailableColors = new List<string> { "Gray", "Navy", "Camel" },
-                    AvailableSizes = new List<string> { "S", "M", "L" },
-                    StockQuantity = 15,
-                    ImageUrl = "https://placehold.co/600x400?text=Wool+Coat",
+                    AvailableColors = new List<Color> { Color.Gray, Color.Navy, Color.Camel },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Wool+Coat" },
                     CreatedAt = new DateTime(2024, 1, 3)
                 },
                 new Product
@@ -154,10 +139,8 @@ namespace Outfitly.Data
                     Description = "Luxurious silk blend blouse for formal occasions.",
                     Price = 79.00m,
                     Category = "Tops",
-                    AvailableColors = new List<string> { "White", "Pink", "Cream" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L" },
-                    StockQuantity = 35,
-                    ImageUrl = "https://placehold.co/600x400?text=Silk+Blouse",
+                    AvailableColors = new List<Color> { Color.White, Color.Pink, Color.Cream },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Silk+Blouse" },
                     CreatedAt = new DateTime(2024, 1, 3)
                 },
                 new Product
@@ -167,10 +150,8 @@ namespace Outfitly.Data
                     Description = "Classic denim jacket that never goes out of style.",
                     Price = 119.00m,
                     Category = "Outerwear",
-                    AvailableColors = new List<string> { "Blue", "Black" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 40,
-                    ImageUrl = "https://placehold.co/600x400?text=Denim+Jacket",
+                    AvailableColors = new List<Color> { Color.Blue, Color.Black },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Denim+Jacket" },
                     CreatedAt = new DateTime(2024, 1, 4)
                 },
                 new Product
@@ -180,10 +161,8 @@ namespace Outfitly.Data
                     Description = "Comfortable wide leg trousers with a modern silhouette.",
                     Price = 95.00m,
                     Category = "Bottoms",
-                    AvailableColors = new List<string> { "Black", "Beige", "Navy" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L", "XL" },
-                    StockQuantity = 55,
-                    ImageUrl = "https://placehold.co/600x400?text=Wide+Leg+Trousers",
+                    AvailableColors = new List<Color> { Color.Black, Color.Beige, Color.Navy },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Wide+Leg+Trousers" },
                     CreatedAt = new DateTime(2024, 1, 4)
                 },
                 new Product
@@ -193,10 +172,8 @@ namespace Outfitly.Data
                     Description = "Ultra-soft 100% cashmere sweater for ultimate comfort.",
                     Price = 159.00m,
                     Category = "Tops",
-                    AvailableColors = new List<string> { "Cream", "Gray", "Black", "Burgundy" },
-                    AvailableSizes = new List<string> { "S", "M", "L" },
-                    StockQuantity = 20,
-                    ImageUrl = "https://placehold.co/600x400?text=Cashmere+Sweater",
+                    AvailableColors = new List<Color> { Color.Cream, Color.Gray, Color.Black, Color.Burgundy },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Cashmere+Sweater" },
                     CreatedAt = new DateTime(2024, 1, 5)
                 },
                 new Product
@@ -206,10 +183,8 @@ namespace Outfitly.Data
                     Description = "Stylish ankle boots with comfortable block heel.",
                     Price = 189.00m,
                     Category = "Footwear",
-                    AvailableColors = new List<string> { "Black", "Brown", "Cognac" },
-                    AvailableSizes = new List<string> { "36", "37", "38", "39", "40", "41" },
-                    StockQuantity = 30,
-                    ImageUrl = "https://placehold.co/600x400?text=Ankle+Boots",
+                    AvailableColors = new List<Color> { Color.Black, Color.Brown, Color.Cognac },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Ankle+Boots" },
                     CreatedAt = new DateTime(2024, 1, 5)
                 },
                 new Product
@@ -219,10 +194,8 @@ namespace Outfitly.Data
                     Description = "Trendy oversized blazer for a chic look.",
                     Price = 199.00m,
                     Category = "Outerwear",
-                    AvailableColors = new List<string> { "Black", "Gray", "Beige" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 25,
-                    ImageUrl = "https://placehold.co/600x400?text=Oversized+Blazer",
+                    AvailableColors = new List<Color> { Color.Black, Color.Gray, Color.Beige },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Oversized+Blazer" },
                     CreatedAt = new DateTime(2024, 1, 6)
                 },
                 new Product
@@ -232,10 +205,8 @@ namespace Outfitly.Data
                     Description = "Elegant pleated midi skirt for any occasion.",
                     Price = 75.00m,
                     Category = "Bottoms",
-                    AvailableColors = new List<string> { "Black", "Navy", "Olive" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L" },
-                    StockQuantity = 40,
-                    ImageUrl = "https://placehold.co/600x400?text=Midi+Skirt",
+                    AvailableColors = new List<Color> { Color.Black, Color.Navy, Color.Olive },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Midi+Skirt" },
                     CreatedAt = new DateTime(2024, 1, 6)
                 },
                 new Product
@@ -245,10 +216,8 @@ namespace Outfitly.Data
                     Description = "Durable canvas backpack with laptop compartment.",
                     Price = 69.00m,
                     Category = "Accessories",
-                    AvailableColors = new List<string> { "Khaki", "Black", "Navy" },
-                    AvailableSizes = new List<string> { "One Size" },
-                    StockQuantity = 50,
-                    ImageUrl = "https://placehold.co/600x400?text=Canvas+Backpack",
+                    AvailableColors = new List<Color> { Color.Khaki, Color.Black, Color.Navy },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Canvas+Backpack" },
                     CreatedAt = new DateTime(2024, 1, 7)
                 },
                 new Product
@@ -258,10 +227,8 @@ namespace Outfitly.Data
                     Description = "Classic striped polo shirt for casual weekends.",
                     Price = 45.00m,
                     Category = "Tops",
-                    AvailableColors = new List<string> { "Navy/White", "Red/White", "Green/White" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL", "XXL" },
-                    StockQuantity = 60,
-                    ImageUrl = "https://placehold.co/600x400?text=Polo+Shirt",
+                    AvailableColors = new List<Color> { Color.Navy, Color.Red, Color.Green },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Polo+Shirt" },
                     CreatedAt = new DateTime(2024, 1, 7)
                 },
                 new Product
@@ -271,10 +238,8 @@ namespace Outfitly.Data
                     Description = "Premium leather belt with silver buckle.",
                     Price = 55.00m,
                     Category = "Accessories",
-                    AvailableColors = new List<string> { "Black", "Brown" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 80,
-                    ImageUrl = "https://placehold.co/600x400?text=Leather+Belt",
+                    AvailableColors = new List<Color> { Color.Black, Color.Brown },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Leather+Belt" },
                     CreatedAt = new DateTime(2024, 1, 8)
                 },
                 new Product
@@ -284,10 +249,8 @@ namespace Outfitly.Data
                     Description = "Flowing wrap maxi dress perfect for evening events.",
                     Price = 129.00m,
                     Category = "Dresses",
-                    AvailableColors = new List<string> { "Burgundy", "Navy", "Emerald" },
-                    AvailableSizes = new List<string> { "XS", "S", "M", "L" },
-                    StockQuantity = 20,
-                    ImageUrl = "https://placehold.co/600x400?text=Maxi+Dress",
+                    AvailableColors = new List<Color> { Color.Burgundy, Color.Navy, Color.Emerald },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Maxi+Dress" },
                     CreatedAt = new DateTime(2024, 1, 8)
                 },
                 new Product
@@ -297,12 +260,15 @@ namespace Outfitly.Data
                     Description = "Comfortable athletic joggers for workouts or lounging.",
                     Price = 65.00m,
                     Category = "Bottoms",
-                    AvailableColors = new List<string> { "Black", "Gray", "Navy" },
-                    AvailableSizes = new List<string> { "S", "M", "L", "XL" },
-                    StockQuantity = 70,
-                    ImageUrl = "https://placehold.co/600x400?text=Athletic+Joggers",
+                    AvailableColors = new List<Color> { Color.Black, Color.Gray, Color.Navy },
+                    ImageUrls = new List<string> { "https://placehold.co/600x400?text=Athletic+Joggers" },
                     CreatedAt = new DateTime(2024, 1, 9)
                 }
+            );
+
+            // Seed ProductSizes
+            modelBuilder.Entity<ProductSize>().HasData(
+
             );
         }
     }
