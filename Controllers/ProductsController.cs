@@ -15,9 +15,14 @@ namespace Outfitly.Controllers
         }
 
         // GET: Products (Product Listing Page)
-        public async Task<IActionResult> Index(string? category, string? size, string? color, decimal? minPrice, decimal? maxPrice, string? sortBy)
+        public async Task<IActionResult> Index(
+            string? category, string? size, string? color,
+            decimal? minPrice, decimal? maxPrice, string? sortBy,
+            int pageNumber = 1, int pageSize = 12)
         {
-            var query = _context.Products.AsQueryable();
+            var query = _context.Products
+                .Include(p => p.ProductSizes)
+                .AsQueryable();
 
             // Apply filters
             if (!string.IsNullOrEmpty(category))
@@ -55,13 +60,29 @@ namespace Outfitly.Controllers
                 _ => query.OrderBy(p => p.Id) // featured (default)
             };
 
-            var products = await query.ToListAsync();
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Ensure page number is valid
+            if (pageNumber < 1) pageNumber = 1;
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            if (pageNumber > totalPages && totalPages > 0) pageNumber = totalPages;
+
+            // Apply pagination
+            var products = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var viewModel = new ProductListViewModel
             {
                 Products = products,
-                TotalCount = products.Count,
+                TotalCount = totalCount,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
                 SelectedCategory = category,
+                SelectedSize = size,
+                SelectedColor = color,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
                 SortBy = sortBy ?? "featured"
@@ -73,7 +94,9 @@ namespace Outfitly.Controllers
         // GET: Products/Details/5 (Product Detail Page)
         public async Task<IActionResult> Details(int id)
         {
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.ProductSizes)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
             {

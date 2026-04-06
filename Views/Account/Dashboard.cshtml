@@ -1,4 +1,6 @@
-﻿@{
+@model Outfitly.Models.DashboardViewModel
+
+@{
     ViewData["Title"] = "My Account";
 }
 
@@ -6,7 +8,7 @@
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 class="text-3xl md:text-4xl font-light text-black mb-2">My Account</h1>
-        <p class="text-sm text-gray-600">Welcome back, John!</p>
+        <p class="text-sm text-gray-600">Welcome back, @(Model.UserName.Split(' ').FirstOrDefault() ?? Model.UserName)!</p>
     </div>
 </div>
 
@@ -26,26 +28,19 @@
                    class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black border-l-2 border-transparent">
                     Orders
                 </a>
-                <a asp-area="" asp-controller="Account" asp-action="Profile"
-                   class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black border-l-2 border-transparent">
-                    Profile
-                </a>
                 <a asp-area="" asp-controller="Account" asp-action="Addresses"
                    class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black border-l-2 border-transparent">
                     Addresses
                 </a>
-                <a asp-area="" asp-controller="Account" asp-action="Wishlist"
-                   class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black border-l-2 border-transparent">
-                    Wishlist
-                </a>
-                <a asp-area="" asp-controller="Account" asp-action="Settings"
+                <a href="/Identity/Account/Manage"
                    class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-black border-l-2 border-transparent border-t border-gray-200">
                     Settings
                 </a>
-                <a href="#" onclick="return confirm('Are you sure you want to logout?')"
-                   class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-l-2 border-transparent border-t border-gray-200">
-                    Logout
-                </a>
+                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit" class="w-full text-left block px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-l-2 border-transparent border-t border-gray-200">
+                        Logout
+                    </button>
+                </form>
             </nav>
         </aside>
 
@@ -64,7 +59,7 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-2xl font-light text-black mb-1">12</p>
+                    <p class="text-2xl font-light text-black mb-1">@Model.TotalOrders</p>
                     <p class="text-xs text-gray-600">Total Orders</p>
                 </div>
 
@@ -77,7 +72,7 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-2xl font-light text-black mb-1">2</p>
+                    <p class="text-2xl font-light text-black mb-1">@Model.PendingOrders</p>
                     <p class="text-xs text-gray-600">Pending Orders</p>
                 </div>
 
@@ -90,7 +85,7 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-2xl font-light text-black mb-1">$2,459</p>
+                    <p class="text-2xl font-light text-black mb-1">@Model.TotalSpent.ToString("C")</p>
                     <p class="text-xs text-gray-600">Total Spent</p>
                 </div>
             </div>
@@ -104,68 +99,44 @@
                 </div>
 
                 <div class="divide-y divide-gray-200">
-                    <!-- Order 1 -->
-                    <div class="px-6 py-4 hover:bg-gray-50 transition">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                                    <span class="text-gray-400 text-xs">Image</span>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-black mb-1">Order #12345</p>
-                                    <p class="text-xs text-gray-600">Nov 01, 2025 • 2 items</p>
+                    @if (Model.RecentOrders.Any())
+                    {
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <div class="px-6 py-4 hover:bg-gray-50 transition">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-4">
+                                        <div>
+                                            <p class="text-sm font-medium text-black mb-1">Order @order.OrderNumber</p>
+                                            <p class="text-xs text-gray-600">@order.OrderDate.ToString("MMM dd, yyyy")</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-medium text-black mb-1">@order.Total.ToString("C")</p>
+                                        @{
+                                            var statusColor = order.Status.ToLower() switch
+                                            {
+                                                "delivered" => "bg-green-100 text-green-800",
+                                                "shipped" => "bg-blue-100 text-blue-800",
+                                                "cancelled" => "bg-red-100 text-red-800",
+                                                "processing" => "bg-amber-100 text-amber-800",
+                                                _ => "bg-gray-100 text-gray-800"
+                                            };
+                                        }
+                                        <span class="inline-block px-2 py-1 @statusColor text-xs rounded-full">
+                                            @order.Status
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <p class="text-sm font-medium text-black mb-1">$401.60</p>
-                                <span class="inline-block px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
-                                    Processing
-                                </span>
-                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="px-6 py-8 text-center text-gray-500 text-sm">
+                            No recent orders found.
                         </div>
-                    </div>
-
-                    <!-- Order 2 -->
-                    <div class="px-6 py-4 hover:bg-gray-50 transition">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                                    <span class="text-gray-400 text-xs">Image</span>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-black mb-1">Order #12344</p>
-                                    <p class="text-xs text-gray-600">Oct 28, 2025 • 1 item</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-medium text-black mb-1">$129.00</p>
-                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                    Shipped
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order 3 -->
-                    <div class="px-6 py-4 hover:bg-gray-50 transition">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-gray-100 rounded flex-shrink-0 flex items-center justify-center">
-                                    <span class="text-gray-400 text-xs">Image</span>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-black mb-1">Order #12343</p>
-                                    <p class="text-xs text-gray-600">Oct 20, 2025 • 1 item</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-medium text-black mb-1">$249.00</p>
-                                <span class="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                    Delivered
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
 
@@ -214,21 +185,21 @@
                 <div class="bg-white border border-gray-200 rounded p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-medium text-black">Profile Information</h3>
-                        <a asp-area="" asp-controller="Account" asp-action="Profile"
+                        <a asp-area="" asp-controller="Account" asp-action="Addresses"
                            class="text-xs text-gray-600 hover:text-black">Edit</a>
                     </div>
                     <div class="space-y-2">
                         <div>
                             <p class="text-xs text-gray-600">Name</p>
-                            <p class="text-sm text-black">John Doe</p>
+                            <p class="text-sm text-black">@Model.UserName</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-600">Email</p>
-                            <p class="text-sm text-black">john@example.com</p>
+                            <p class="text-sm text-black">@Model.UserEmail</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-600">Phone</p>
-                            <p class="text-sm text-black">+1 (555) 123-4567</p>
+                            <p class="text-sm text-black">@(Model.DefaultAddress?.PhoneNumber ?? "Not provided")</p>
                         </div>
                     </div>
                 </div>
@@ -241,10 +212,21 @@
                            class="text-xs text-gray-600 hover:text-black">Edit</a>
                     </div>
                     <div class="text-sm text-gray-700 leading-relaxed">
-                        <p>123 Main Street</p>
-                        <p>Apartment 4B</p>
-                        <p>New York, NY 10001</p>
-                        <p>United States</p>
+                        @if (Model.DefaultAddress != null)
+                        {
+                            <p>@Model.DefaultAddress.FirstName @Model.DefaultAddress.LastName</p>
+                            <p>@Model.DefaultAddress.AddressLine1</p>
+                            @if (!string.IsNullOrEmpty(Model.DefaultAddress.AddressLine2))
+                            {
+                                <p>@Model.DefaultAddress.AddressLine2</p>
+                            }
+                            <p>@Model.DefaultAddress.City, @Model.DefaultAddress.StateProvince @Model.DefaultAddress.ZipPostalCode</p>
+                            <p>@Model.DefaultAddress.Country</p>
+                        }
+                        else
+                        {
+                            <p class="text-gray-500 italic">No default address saved.</p>
+                        }
                     </div>
                 </div>
             </div>

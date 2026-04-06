@@ -255,7 +255,6 @@
 }
 
 @code {
-    private List<Product> _products = new();
     private List<Product> _filteredProducts = new();
     private string _searchQuery = "";
     private string _categoryFilter = "";
@@ -275,32 +274,31 @@
     private async Task LoadProducts()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        _products = await context.Products.Include(p => p.ProductSizes).OrderByDescending(p => p.CreatedAt).ToListAsync();
-        _filteredProducts = _products;
-    }
-
-    private void SearchProducts()
-    {
-        FilterProducts();
-    }
-
-    private void FilterProducts()
-    {
-        _filteredProducts = _products;
+        IQueryable<Product> query = context.Products
+            .Include(p => p.ProductSizes)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _filteredProducts = _filteredProducts
-            .Where(p => p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+            query = query.Where(p => p.Name.Contains(_searchQuery));
         }
 
         if (!string.IsNullOrWhiteSpace(_categoryFilter))
         {
-            _filteredProducts = _filteredProducts
-            .Where(p => p.Category == _categoryFilter)
-            .ToList();
+            query = query.Where(p => p.Category == _categoryFilter);
         }
+
+        _filteredProducts = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+    }
+
+    private async Task SearchProducts()
+    {
+        await LoadProducts();
+    }
+
+    private async Task FilterProducts()
+    {
+        await LoadProducts();
     }
 
     private void OpenAddModal()

@@ -1,4 +1,4 @@
-﻿@using Outfitly.Models
+@using Outfitly.Models
 @model ProductListViewModel
 @{
     ViewData["Title"] = "Shop";
@@ -14,132 +14,168 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
             <span>Filters</span>
-            <span id="filterCount" class="hidden bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            @{
+                int activeFilterCount = 0;
+                if (!string.IsNullOrEmpty(Model.SelectedCategory)) activeFilterCount++;
+                if (!string.IsNullOrEmpty(Model.SelectedSize)) activeFilterCount++;
+                if (!string.IsNullOrEmpty(Model.SelectedColor)) activeFilterCount++;
+                if (Model.MinPrice.HasValue) activeFilterCount++;
+                if (Model.MaxPrice.HasValue) activeFilterCount++;
+            }
+            @if (activeFilterCount > 0)
+            {
+                <span id="filterCount" class="bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">@activeFilterCount</span>
+            }
+            else
+            {
+                <span id="filterCount" class="hidden bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            }
         </button>
 
         <div class="flex items-center gap-4">
             <p class="text-sm text-gray-600 hidden sm:block">
-                <span class="font-medium text-black">124</span> products
+                <span class="font-medium text-black">@Model.TotalCount</span> products
             </p>
+            @{
+                var sortOptions = new[] {
+                    ("featured", "Featured"),
+                    ("newest", "Newest"),
+                    ("price-low", "Price: Low to High"),
+                    ("price-high", "Price: High to Low"),
+                    ("popular", "Most Popular")
+                };
+            }
             <select id="sortSelect" class="text-sm border border-gray-300 rounded px-4 py-2.5 focus:outline-none focus:border-black bg-white">
-                <option value="featured">Featured</option>
-                <option value="newest">Newest</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="popular">Most Popular</option>
+                @foreach (var (val, label) in sortOptions)
+                {
+                    if (Model.SortBy == val)
+                    {
+                        <option value="@val" selected>@label</option>
+                    }
+                    else
+                    {
+                        <option value="@val">@label</option>
+                    }
+                }
             </select>
         </div>
     </div>
 
     <!-- Products Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-
-        <!-- Product Card 1 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="1"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Minimal Cotton Tee</h3>
-            <p class="text-xs text-gray-600">$49.00</p>
-        </a>
-
-        <!-- Product Card 2 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="2"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Tailored Linen Pants</h3>
-            <p class="text-xs text-gray-600">$89.00</p>
-        </a>
-
-        <!-- Product Card 3 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="3"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Leather Crossbody Bag</h3>
-            <p class="text-xs text-gray-600">$129.00</p>
-        </a>
-
-        <!-- Product Card 4 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="4"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Classic Wool Coat</h3>
-            <p class="text-xs text-gray-600">$249.00</p>
-        </a>
-
-        <!-- Product Card 5 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="5"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Silk Blend Blouse</h3>
-            <p class="text-xs text-gray-600">$79.00</p>
-        </a>
-
-        <!-- Product Card 6 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="6"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Denim Jacket</h3>
-            <p class="text-xs text-gray-600">$119.00</p>
-        </a>
-
-        <!-- Product Card 7 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="7"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Wide Leg Trousers</h3>
-            <p class="text-xs text-gray-600">$95.00</p>
-        </a>
-
-        <!-- Product Card 8 -->
-        <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="8"
-           class="group cursor-pointer product-card">
-            <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
-                <span class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">Product Image</span>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
-            </div>
-            <h3 class="text-sm font-light text-black mb-1">Cashmere Sweater</h3>
-            <p class="text-xs text-gray-600">$159.00</p>
-        </a>
-
-    </div>
+    @if (Model.Products != null && Model.Products.Any())
+    {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+            @foreach (var product in Model.Products)
+            {
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                   class="group cursor-pointer product-card">
+                    <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                        @{
+                            var firstImage = product.ImageUrls?.FirstOrDefault();
+                            var hasRealImage = !string.IsNullOrEmpty(firstImage) && !firstImage.Contains("placehold.co");
+                        }
+                        @if (hasRealImage)
+                        {
+                            <img src="@firstImage" alt="@product.Name"
+                                 class="absolute inset-0 w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 items-center justify-center flex-col gap-2 hidden">
+                                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                <span class="text-gray-400 text-xs text-center px-4">@product.Name</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="absolute inset-0 flex items-center justify-center flex-col gap-2">
+                                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                <span class="text-gray-400 text-xs text-center px-4">@product.Name</span>
+                            </div>
+                        }
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">@product.Name</h3>
+                    <p class="text-xs text-gray-600">$@product.Price.ToString("F2")</p>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-20">
+            <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p class="text-gray-500 text-lg mb-2">No products found</p>
+            <p class="text-gray-400 text-sm">Try adjusting your filters or search criteria.</p>
+        </div>
+    }
 
     <!-- Pagination -->
-    <div class="mt-16 flex justify-center">
-        <nav class="flex items-center gap-2">
-            <button class="px-4 py-2 text-sm text-gray-400 cursor-not-allowed">
-                Previous
-            </button>
-            <button class="px-4 py-2 text-sm bg-black text-white">1</button>
-            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">2</button>
-            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">3</button>
-            <span class="px-4 py-2 text-sm text-gray-400">...</span>
-            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">10</button>
-            <button class="px-4 py-2 text-sm text-gray-700 hover:text-black">
-                Next
-            </button>
-        </nav>
-    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="mt-16 flex justify-center">
+            <nav class="flex items-center gap-2">
+                @{
+                    // Helper to build a URL preserving all current query params
+                    string BuildPageUrl(int page)
+                    {
+                        var queryParams = new List<string>();
+                        if (!string.IsNullOrEmpty(Model.SelectedCategory)) queryParams.Add($"category={Uri.EscapeDataString(Model.SelectedCategory)}");
+                        if (!string.IsNullOrEmpty(Model.SelectedSize)) queryParams.Add($"size={Uri.EscapeDataString(Model.SelectedSize)}");
+                        if (!string.IsNullOrEmpty(Model.SelectedColor)) queryParams.Add($"color={Uri.EscapeDataString(Model.SelectedColor)}");
+                        if (Model.MinPrice.HasValue) queryParams.Add($"minPrice={Model.MinPrice.Value}");
+                        if (Model.MaxPrice.HasValue) queryParams.Add($"maxPrice={Model.MaxPrice.Value}");
+                        if (Model.SortBy != "featured") queryParams.Add($"sortBy={Uri.EscapeDataString(Model.SortBy)}");
+                        queryParams.Add($"pageNumber={page}");
+                        queryParams.Add($"pageSize={Model.PageSize}");
+                        return "/Products?" + string.Join("&", queryParams);
+                    }
+                }
+
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="@BuildPageUrl(Model.CurrentPage - 1)" class="px-4 py-2 text-sm text-gray-700 hover:text-black">
+                        Previous
+                    </a>
+                }
+                else
+                {
+                    <span class="px-4 py-2 text-sm text-gray-400 cursor-not-allowed">Previous</span>
+                }
+
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.CurrentPage)
+                    {
+                        <span class="px-4 py-2 text-sm bg-black text-white">@i</span>
+                    }
+                    else if (i == 1 || i == Model.TotalPages || (i >= Model.CurrentPage - 1 && i <= Model.CurrentPage + 1))
+                    {
+                        <a href="@BuildPageUrl(i)" class="px-4 py-2 text-sm text-gray-700 hover:text-black hover:bg-gray-100">@i</a>
+                    }
+                    else if (i == Model.CurrentPage - 2 || i == Model.CurrentPage + 2)
+                    {
+                        <span class="px-4 py-2 text-sm text-gray-400">...</span>
+                    }
+                }
+
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="@BuildPageUrl(Model.CurrentPage + 1)" class="px-4 py-2 text-sm text-gray-700 hover:text-black">
+                        Next
+                    </a>
+                }
+                else
+                {
+                    <span class="px-4 py-2 text-sm text-gray-400 cursor-not-allowed">Next</span>
+                }
+            </nav>
+        </div>
+    }
 </div>
 
 <!-- Filter Sidebar (Slide-in Panel) -->
@@ -159,22 +195,18 @@
         <div class="mb-8 pb-8 border-b border-gray-200">
             <h3 class="text-xs font-medium text-black mb-4 tracking-wide">CATEGORY</h3>
             <div class="space-y-3">
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="category" value="tops" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Tops</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="category" value="bottoms" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Bottoms</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="category" value="outerwear" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Outerwear</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="category" value="accessories" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">Accessories</span>
-                </label>
+                @{
+                    var categories = new[] { "Tops", "Bottoms", "Outerwear", "Dresses", "Footwear", "Accessories" };
+                }
+                @foreach (var cat in categories)
+                {
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="category" value="@cat"
+                               class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-category"
+                               @(Model.SelectedCategory?.Equals(cat, StringComparison.OrdinalIgnoreCase) == true ? "checked" : "")>
+                        <span class="ml-3 text-sm text-gray-700 group-hover:text-black">@cat</span>
+                    </label>
+                }
             </div>
         </div>
 
@@ -183,11 +215,11 @@
             <h3 class="text-xs font-medium text-black mb-4 tracking-wide">PRICE RANGE</h3>
             <div class="space-y-4">
                 <div>
-                    <input type="range" min="0" max="500" value="250" id="priceRange"
+                    <input type="range" min="0" max="500" value="@(Model.MaxPrice ?? 500)" id="priceRange"
                            class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black">
                     <div class="flex justify-between mt-3">
                         <span class="text-xs text-gray-600">$0</span>
-                        <span class="text-sm text-black font-medium" id="priceValue">$250</span>
+                        <span class="text-sm text-black font-medium" id="priceValue">$@(Model.MaxPrice ?? 500)</span>
                         <span class="text-xs text-gray-600">$500</span>
                     </div>
                 </div>
@@ -198,26 +230,18 @@
         <div class="mb-8 pb-8 border-b border-gray-200">
             <h3 class="text-xs font-medium text-black mb-4 tracking-wide">SIZE</h3>
             <div class="space-y-3">
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="size" value="xs" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">XS</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="size" value="s" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">S</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="size" value="m" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">M</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="size" value="l" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">L</span>
-                </label>
-                <label class="flex items-center cursor-pointer group">
-                    <input type="checkbox" name="size" value="xl" class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-checkbox">
-                    <span class="ml-3 text-sm text-gray-700 group-hover:text-black">XL</span>
-                </label>
+                @{
+                    var sizes = new[] { "XS", "S", "M", "L", "XL" };
+                }
+                @foreach (var sz in sizes)
+                {
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="size" value="@sz"
+                               class="w-4 h-4 border-gray-300 text-black focus:ring-black filter-size"
+                               @(Model.SelectedSize?.Equals(sz, StringComparison.OrdinalIgnoreCase) == true ? "checked" : "")>
+                        <span class="ml-3 text-sm text-gray-700 group-hover:text-black">@sz</span>
+                    </label>
+                }
             </div>
         </div>
 
@@ -225,22 +249,27 @@
         <div class="mb-8">
             <h3 class="text-xs font-medium text-black mb-4 tracking-wide">COLOR</h3>
             <div class="flex flex-wrap gap-3">
-                <button class="w-10 h-10 rounded-full bg-black border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="black" title="Black"></button>
-                <button class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="white" title="White"></button>
-                <button class="w-10 h-10 rounded-full bg-gray-500 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="gray" title="Gray"></button>
-                <button class="w-10 h-10 rounded-full bg-blue-600 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="blue" title="Blue"></button>
-                <button class="w-10 h-10 rounded-full bg-red-600 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="red" title="Red"></button>
-                <button class="w-10 h-10 rounded-full bg-green-700 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="green" title="Green"></button>
-                <button class="w-10 h-10 rounded-full bg-yellow-600 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="yellow" title="Yellow"></button>
-                <button class="w-10 h-10 rounded-full bg-pink-400 border-2 border-gray-300 hover:border-black transition color-swatch"
-                        data-color="pink" title="Pink"></button>
+                @{
+                    var colorOptions = new (string Name, string BgClass)[]
+                    {
+                        ("Black", "bg-black"),
+                        ("White", "bg-white"),
+                        ("Gray", "bg-gray-500"),
+                        ("Blue", "bg-blue-600"),
+                        ("Red", "bg-red-600"),
+                        ("Green", "bg-green-700"),
+                        ("Yellow", "bg-yellow-600"),
+                        ("Pink", "bg-pink-400"),
+                        ("Navy", "bg-blue-900"),
+                        ("Brown", "bg-yellow-700")
+                    };
+                }
+                @foreach (var co in colorOptions)
+                {
+                    var isSelected = Model.SelectedColor?.Equals(co.Name, StringComparison.OrdinalIgnoreCase) == true;
+                    <button class="w-10 h-10 rounded-full @co.BgClass border-2 border-gray-300 hover:border-black transition color-swatch @(isSelected ? "ring-2 ring-black ring-offset-2" : "")"
+                            data-color="@co.Name" title="@co.Name"></button>
+                }
             </div>
         </div>
 
@@ -265,7 +294,6 @@
         const filterOverlay = document.getElementById('filterOverlay');
         const filterToggle = document.getElementById('filterToggle');
         const closeFilter = document.getElementById('closeFilter');
-        const applyFilters = document.getElementById('applyFilters');
         const filterCount = document.getElementById('filterCount');
 
         // Open filter panel
@@ -284,21 +312,6 @@
 
         closeFilter.addEventListener('click', closeFilterPanel);
         filterOverlay.addEventListener('click', closeFilterPanel);
-        applyFilters.addEventListener('click', closeFilterPanel);
-
-        // Update filter count
-        function updateFilterCount() {
-            const checkedFilters = document.querySelectorAll('.filter-checkbox:checked').length;
-            const selectedColors = document.querySelectorAll('.color-swatch.ring-2').length;
-            const total = checkedFilters + selectedColors;
-
-            if (total > 0) {
-                filterCount.textContent = total;
-                filterCount.classList.remove('hidden');
-            } else {
-                filterCount.classList.add('hidden');
-            }
-        }
 
         // Price range slider
         const priceRange = document.getElementById('priceRange');
@@ -308,38 +321,68 @@
             priceValue.textContent = '$' + this.value;
         });
 
-        // Filter checkbox listeners
-        document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', updateFilterCount);
-        });
-
-        // Color selection
+        // Color selection (single-select)
         document.querySelectorAll('.color-swatch').forEach(button => {
             button.addEventListener('click', function() {
-                this.classList.toggle('ring-2');
-                this.classList.toggle('ring-black');
-                this.classList.toggle('ring-offset-2');
-                updateFilterCount();
+                // Remove selection from all
+                document.querySelectorAll('.color-swatch').forEach(b => {
+                    b.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
+                });
+                // Toggle on clicked
+                this.classList.add('ring-2', 'ring-black', 'ring-offset-2');
             });
         });
 
         // Clear all filters
         document.getElementById('clearAllFilters').addEventListener('click', function() {
-            document.querySelectorAll('.filter-checkbox').forEach(checkbox => {
-                checkbox.checked = false;
+            document.querySelectorAll('.filter-category').forEach(r => r.checked = false);
+            document.querySelectorAll('.filter-size').forEach(r => r.checked = false);
+            document.querySelectorAll('.color-swatch').forEach(b => {
+                b.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
             });
-            document.querySelectorAll('.color-swatch').forEach(button => {
-                button.classList.remove('ring-2', 'ring-black', 'ring-offset-2');
-            });
-            priceRange.value = 250;
-            priceValue.textContent = '$250';
-            updateFilterCount();
+            priceRange.value = 500;
+            priceValue.textContent = '$500';
         });
 
-        // Sort functionality
+        // Apply filters — build URL and navigate
+        document.getElementById('applyFilters').addEventListener('click', function() {
+            const params = new URLSearchParams();
+
+            // Category
+            const selectedCategory = document.querySelector('.filter-category:checked');
+            if (selectedCategory) params.set('category', selectedCategory.value);
+
+            // Size
+            const selectedSize = document.querySelector('.filter-size:checked');
+            if (selectedSize) params.set('size', selectedSize.value);
+
+            // Color
+            const selectedColor = document.querySelector('.color-swatch.ring-2');
+            if (selectedColor) params.set('color', selectedColor.dataset.color);
+
+            // Price range
+            const maxPrice = parseInt(priceRange.value);
+            if (maxPrice < 500) params.set('maxPrice', maxPrice);
+
+            // Preserve current sort
+            const currentSort = document.getElementById('sortSelect').value;
+            if (currentSort && currentSort !== 'featured') params.set('sortBy', currentSort);
+
+            // Reset to page 1 when filters change
+            window.location.href = '/Products?' + params.toString();
+        });
+
+        // Sort functionality — navigate with updated sort
         document.getElementById('sortSelect').addEventListener('change', function() {
-            console.log('Sort by:', this.value);
-            // TODO: Implement sorting logic
+            const params = new URLSearchParams(window.location.search);
+            if (this.value && this.value !== 'featured') {
+                params.set('sortBy', this.value);
+            } else {
+                params.delete('sortBy');
+            }
+            // Reset to page 1 when sort changes
+            params.delete('pageNumber');
+            window.location.href = '/Products?' + params.toString();
         });
     </script>
 }

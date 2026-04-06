@@ -280,7 +280,6 @@
 }
 
 @code {
-    private List<Order> _orders = new();
     private List<Order> _filteredOrders = new();
     private string _searchQuery = "";
     private string _statusFilter = "";
@@ -299,31 +298,27 @@
     private async Task LoadOrders()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        _orders = await context.Orders
+        IQueryable<Order> query = context.Orders
             .Include(o => o.OrderItems)
-            .OrderByDescending(o => o.OrderDate)
-            .ToListAsync();
-        _filteredOrders = _orders;
-    }
-
-    private void FilterOrders()
-    {
-        _filteredOrders = _orders;
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(_searchQuery))
         {
-            _filteredOrders = _filteredOrders
-                .Where(o => o.OrderNumber.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                           o.CustomerName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            query = query.Where(o => o.OrderNumber.Contains(_searchQuery) ||
+                                     o.CustomerName.Contains(_searchQuery));
         }
 
         if (!string.IsNullOrWhiteSpace(_statusFilter))
         {
-            _filteredOrders = _filteredOrders
-                .Where(o => o.Status == _statusFilter)
-                .ToList();
+            query = query.Where(o => o.Status == _statusFilter);
         }
+
+        _filteredOrders = await query.OrderByDescending(o => o.OrderDate).ToListAsync();
+    }
+
+    private async Task FilterOrders()
+    {
+        await LoadOrders();
     }
 
     private void OpenDetailsModal(Order order)

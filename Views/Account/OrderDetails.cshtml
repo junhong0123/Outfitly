@@ -1,0 +1,287 @@
+@model Outfitly.Models.Order
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<!-- Page Header -->
+<div class="bg-gray-50 border-b border-gray-200">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <a asp-action="Orders" class="inline-flex items-center text-sm text-gray-600 hover:text-black mb-4 transition">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Orders
+        </a>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-light text-black mb-2">Order @Model.OrderNumber</h1>
+                <p class="text-sm text-gray-600">Placed on @Model.OrderDate.ToString("MMMM dd, yyyy")</p>
+            </div>
+            <div>
+                @{
+                    var statusColor = Model.Status.ToLower() switch
+                    {
+                        "delivered" => "bg-green-100 text-green-800",
+                        "shipped" => "bg-blue-100 text-blue-800",
+                        "cancelled" => "bg-red-100 text-red-800",
+                        "processing" => "bg-amber-100 text-amber-800",
+                        _ => "bg-gray-100 text-gray-800"
+                    };
+                }
+                <span class="inline-flex items-center px-4 py-1.5 @statusColor text-sm font-medium rounded-full">
+                    @Model.Status
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+    @if (Model.Status.ToLower() == "shipped" && !string.IsNullOrEmpty(Model.TrackingNumber))
+    {
+        <!-- Tracking Banner -->
+        <div class="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="flex items-start gap-4">
+                <div class="bg-blue-100 text-blue-600 p-2 rounded-full">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-lg font-medium text-blue-900 mb-1">Your order is on the way!</h3>
+                    @if (Model.DeliveredDate.HasValue)
+                    {
+                        <p class="text-sm text-blue-800 mb-3">Expected delivery: @Model.DeliveredDate.Value.ToString("MMMM dd, yyyy")</p>
+                    }
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm text-blue-700 font-mono tracking-tight bg-blue-100/50 px-3 py-1 rounded border border-blue-200">
+                            @Model.TrackingNumber
+                        </span>
+                        <button onclick="trackOrder(@Model.Id)" class="text-sm text-blue-600 font-medium hover:text-blue-800 underline transition">
+                            Track Package
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Order Items -->
+        <div class="md:col-span-2 space-y-8 mt-1">
+            <h2 class="text-xl font-light text-black">Items Included</h2>
+            
+            <div class="bg-white border border-gray-200 rounded overflow-hidden divide-y divide-gray-100">
+                @foreach (var item in Model.OrderItems)
+                {
+                    <div class="p-6 flex flex-col sm:flex-row gap-6">
+                        <div class="w-24 h-32 bg-gray-50 flex-shrink-0 border border-gray-200 m-auto">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            }
+                        </div>
+                        <div class="flex-grow flex flex-col">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-medium text-black line-clamp-2 pr-4">
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="hover:text-gray-600 transition">
+                                        @item.ProductName
+                                    </a>
+                                </h3>
+                                <p class="text-lg font-medium text-black">@item.Price.ToString("C")</p>
+                            </div>
+                            
+                            <dl class="space-y-1 text-sm text-gray-600 mt-2 mb-4">
+                                @if (!string.IsNullOrEmpty(item.Color))
+                                {
+                                    <div class="flex items-center gap-2">
+                                        <dt class="w-12">Color:</dt>
+                                        <dd class="font-medium text-black">@item.Color</dd>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Size))
+                                {
+                                    <div class="flex items-center gap-2">
+                                        <dt class="w-12">Size:</dt>
+                                        <dd class="font-medium text-black">@item.Size</dd>
+                                    </div>
+                                }
+                                <div class="flex items-center gap-2">
+                                    <dt class="w-12">Qty:</dt>
+                                    <dd class="font-medium text-black">@item.Quantity</dd>
+                                </div>
+                            </dl>
+
+                            <div class="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
+                                <p class="text-sm font-medium text-black">Total: @item.TotalPrice.ToString("C")</p>
+                                
+                                @if (Model.Status.ToLower() == "delivered")
+                                {
+                                    <a asp-action="WriteReview" asp-route-productId="@item.ProductId" class="text-sm text-black border-b border-black hover:text-gray-600 hover:border-gray-600 transition">
+                                        Write a Review
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Summary & Details -->
+        <div class="md:col-span-1 space-y-8">
+            
+            <!-- Summary -->
+            <div class="bg-gray-50 border border-gray-200 rounded p-6">
+                <h3 class="text-lg font-medium text-black mb-4">Order Summary</h3>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex justify-between text-gray-600">
+                        <dt>Subtotal</dt>
+                        <dd class="font-medium text-black">@Model.Subtotal.ToString("C")</dd>
+                    </div>
+                    <div class="flex justify-between text-gray-600">
+                        <dt>Shipping</dt>
+                        <dd class="font-medium text-black">
+                            @(Model.ShippingCost == 0 ? "Free" : Model.ShippingCost.ToString("C"))
+                        </dd>
+                    </div>
+                    @if (Model.Tax > 0)
+                    {
+                        <div class="flex justify-between text-gray-600">
+                            <dt>Estimated Tax</dt>
+                            <dd class="font-medium text-black">@Model.Tax.ToString("C")</dd>
+                        </div>
+                    }
+                    <div class="border-t border-gray-200 pt-3 mt-3 flex justify-between items-center bg-gray-50 -mx-6 px-6 pb-2">
+                        <dt class="text-base font-medium text-black">Total</dt>
+                        <dd class="text-xl font-medium text-black">@Model.Total.ToString("C")</dd>
+                    </div>
+                </dl>
+                
+                <div class="mt-6 space-y-3">
+                    <form asp-action="BuyAgain" method="post">
+                        <input type="hidden" name="orderId" value="@Model.Id" />
+                        <button type="submit" class="w-full bg-black text-white px-4 py-3 text-sm font-medium transition hover:bg-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                            BUY AGAIN
+                        </button>
+                    </form>
+
+                    @if (Model.Status.ToLower() == "processing" || Model.Status.ToLower() == "pending")
+                    {
+                        <button onclick="cancelOrder(@Model.Id)" class="w-full bg-white text-red-600 border border-red-200 px-4 py-3 text-sm font-medium transition hover:bg-red-50 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            CANCEL ORDER
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            <div class="bg-white border border-gray-200 rounded p-6">
+                <h3 class="text-lg font-medium text-black mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Shipping Address
+                </h3>
+                <address class="not-italic text-sm text-gray-600 space-y-1">
+                    <p class="font-medium text-black">@Model.CustomerName</p>
+                    <p>@Model.ShippingAddressLine1</p>
+                    @if (!string.IsNullOrEmpty(Model.ShippingAddressLine2))
+                    {
+                        <p>@Model.ShippingAddressLine2</p>
+                    }
+                    <p>@Model.ShippingCity, @Model.ShippingState @Model.ShippingZipCode</p>
+                    <p>@Model.ShippingCountry</p>
+                </address>
+
+                <div class="mt-6 pt-6 border-t border-gray-100">
+                    <h3 class="text-sm font-medium text-black mb-2 text-gray-400">Contact Method</h3>
+                    <p class="text-sm text-gray-600">@Model.CustomerEmail</p>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="bg-white border border-gray-200 rounded p-6">
+                <h3 class="text-lg font-medium text-black mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Payment Method
+                </h3>
+                <div class="flex items-center gap-3 text-sm text-gray-600">
+                    <div class="w-8 h-5 bg-gray-200 rounded border border-gray-300 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
+                        </svg>
+                    </div>
+                    <span>Ended in •••• 4242</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        async function cancelOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this order?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/Account/CancelOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `orderId=${orderId}`
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to cancel order.');
+                }
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        async function trackOrder(orderId) {
+            try {
+                const response = await fetch('/Account/TrackOrder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `orderId=${orderId}`
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Simple tracking display for now
+                    alert(`Tracking Number: ${data.tracking.trackingNumber}\nCarrier: ${data.tracking.carrier}\nStatus: ${data.tracking.status}\nEstimated Delivery: ${data.tracking.estimatedDelivery}`);
+                }
+            } catch (error) {
+                console.error('Error fetching tracking info:', error);
+            }
+        }
+    </script>
+}

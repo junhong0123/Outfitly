@@ -1,4 +1,4 @@
-﻿@model List<Outfitly.Models.CartItem>
+@model List<Outfitly.Models.CartItem>
 @{
     ViewData["Title"] = "Shopping Cart";
     var cart = new Outfitly.Models.Cart { Items = Model ?? new List<Outfitly.Models.CartItem>() };
@@ -80,7 +80,10 @@
 
         <!-- Right Column: Order Summary -->
         <div class="lg:col-span-1">
-            <div class="bg-white border border-gray-200 rounded p-6 sticky top-24">
+            <div id="orderSummary" class="bg-white border border-gray-200 rounded p-6 sticky top-24"
+                 data-free-shipping-threshold="100"
+                 data-shipping-cost="10"
+                 data-tax-rate="0.10">
                 <h2 class="text-lg font-medium text-black mb-6">Order Summary</h2>
 
                 <!-- Summary Details -->
@@ -176,75 +179,196 @@ else
 
 @section Scripts {
     <script>
-        // Quantity increase/decrease
-        document.querySelectorAll('.increase-qty').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('.quantity-input');
-                input.value = parseInt(input.value) + 1;
-                updateCartTotals();
-            });
-        });
+        // ── Configurable values from data-* attributes ──
+        const summaryEl = document.getElementById('orderSummary');
+        const FREE_SHIPPING_THRESHOLD = parseFloat(summaryEl?.dataset.freeShippingThreshold ?? '100');
+        const SHIPPING_COST = parseFloat(summaryEl?.dataset.shippingCost ?? '10');
+        const TAX_RATE = parseFloat(summaryEl?.dataset.taxRate ?? '0.10');
 
-        document.querySelectorAll('.decrease-qty').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('.quantity-input');
-                if (parseInt(input.value) > 1) {
-                    input.value = parseInt(input.value) - 1;
+        let promoDiscount = 0;
+
+        // ── Helper: sync quantity to server ──
+        async function syncCartItem(cartItemId, quantity) {
+            try {
+                const res = await fetch('/Cart/Update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `cartItemId=${cartItemId}&quantity=${quantity}`
+                });
+                const data = await res.json();
+                if (!data.success) console.warn('Cart update failed:', data.message);
+                return data.success;
+            } catch (err) {
+                console.error('Cart sync error:', err);
+                return false;
+            }
+        }
+
+        // ── Helper: remove item from server ──
+        async function removeCartItem(cartItemId) {
+            try {
+                const res = await fetch('/Cart/Remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `cartItemId=${cartItemId}`
+                });
+                const data = await res.json();
+                return data.success;
+            } catch (err) {
+                console.error('Cart remove error:', err);
+                return false;
+            }
+        }
+
+        // ── Update totals from DOM ──
+        function updateCartTotals() {
+            let subtotal = 0;
+            let totalItems = 0;
+
+            document.querySelectorAll('.cart-item').forEach(el => {
+                const price = parseFloat(el.dataset.price);
+                const qty = parseInt(el.querySelector('.quantity-input').value) || 0;
+                const itemTotal = price * qty;
+                subtotal += itemTotal;
+                totalItems += qty;
+
+                // Update per-item total
+                el.querySelector('.item-total').textContent = '$' + itemTotal.toFixed(2);
+            });
+
+            const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+            const tax = subtotal * TAX_RATE;
+            const total = subtotal + shipping + tax - promoDiscount;
+
+            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('shipping').textContent = '$' + shipping.toFixed(2);
+            document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+            document.getElementById('total').textContent = '$' + Math.max(0, total).toFixed(2);
+
+            // Update free-shipping notice
+            const freeShipNotice = document.querySelector('.bg-amber-50');
+            if (freeShipNotice) {
+                if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+                    freeShipNotice.classList.add('hidden');
+                } else {
+                    freeShipNotice.classList.remove('hidden');
+                    const diff = (FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2);
+                    freeShipNotice.querySelector('p').innerHTML =
+                        `Add <strong>$${diff}</strong> more to get free shipping!`;
+                }
+            }
+        }
+
+        // ── Quantity increase ──
+        document.querySelectorAll('.increase-qty').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const itemEl = this.closest('.cart-item');
+                const input = itemEl.querySelector('.quantity-input');
+                const newQty = parseInt(input.value) + 1;
+                const itemId = itemEl.dataset.itemId;
+
+                input.value = newQty;
+                updateCartTotals();
+
+                const ok = await syncCartItem(itemId, newQty);
+                if (!ok) {
+                    input.value = newQty - 1;
                     updateCartTotals();
                 }
             });
         });
 
-        // Quantity input change
-        document.querySelectorAll('.quantity-input').forEach(input => {
-            input.addEventListener('change', function() {
-                if (parseInt(this.value) < 1) {
-                    this.value = 1;
-                }
+        // ── Quantity decrease ──
+        document.querySelectorAll('.decrease-qty').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const itemEl = this.closest('.cart-item');
+                const input = itemEl.querySelector('.quantity-input');
+                const oldQty = parseInt(input.value);
+                if (oldQty <= 1) return;
+
+                const newQty = oldQty - 1;
+                const itemId = itemEl.dataset.itemId;
+
+                input.value = newQty;
                 updateCartTotals();
+
+                const ok = await syncCartItem(itemId, newQty);
+                if (!ok) {
+                    input.value = oldQty;
+                    updateCartTotals();
+                }
             });
         });
 
-        // Remove item from cart
+        // ── Quantity manual input ──
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', async function () {
+                const itemEl = this.closest('.cart-item');
+                const itemId = itemEl.dataset.itemId;
+                let newQty = parseInt(this.value);
+                if (isNaN(newQty) || newQty < 1) newQty = 1;
+                this.value = newQty;
+                updateCartTotals();
+                await syncCartItem(itemId, newQty);
+            });
+        });
+
+        // ── Remove item ──
         document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (confirm('Remove this item from cart?')) {
-                    const cartItem = this.closest('.bg-white');
-                    cartItem.style.opacity = '0';
+            btn.addEventListener('click', async function () {
+                if (!confirm('Remove this item from cart?')) return;
+
+                const itemEl = this.closest('.cart-item');
+                const itemId = this.dataset.itemId;
+
+                const ok = await removeCartItem(itemId);
+                if (ok) {
+                    itemEl.style.transition = 'opacity 0.3s';
+                    itemEl.style.opacity = '0';
                     setTimeout(() => {
-                        cartItem.remove();
+                        itemEl.remove();
                         updateCartTotals();
                         checkEmptyCart();
                     }, 300);
+                } else {
+                    alert('Failed to remove item. Please try again.');
                 }
             });
         });
 
-        // Update cart totals (placeholder calculation)
-        function updateCartTotals() {
-            // TODO: Implement actual calculation based on cart items
-            console.log('Cart totals updated');
-        }
-
-        // Check if cart is empty and show empty state
+        // ── Check empty cart ──
         function checkEmptyCart() {
-            const cartItems = document.querySelectorAll('.bg-white.border');
-            if (cartItems.length === 0) {
-                document.querySelector('.grid').classList.add('hidden');
-                document.getElementById('emptyCartState').classList.remove('hidden');
+            const items = document.querySelectorAll('.cart-item');
+            if (items.length === 0) {
+                location.reload();
             }
         }
 
-        // Promo code application
-        document.querySelector('button[class*="Apply"]').addEventListener('click', function() {
-            const promoInput = this.previousElementSibling;
-            const code = promoInput.value.trim();
+        // ── Promo code ──
+        document.getElementById('applyPromoBtn').addEventListener('click', async function () {
+            const codeInput = document.getElementById('promoCodeInput');
+            const code = codeInput.value.trim();
+            if (!code) { alert('Please enter a promo code'); return; }
 
-            if (code) {
-                alert('Promo code "' + code + '" applied!');
-                // TODO: Implement actual promo code logic
-            } else {
-                alert('Please enter a promo code');
+            try {
+                const res = await fetch('/Checkout/ApplyPromoCode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    promoDiscount = data.discount;
+                    updateCartTotals();
+                    alert(data.message);
+                } else {
+                    promoDiscount = 0;
+                    updateCartTotals();
+                    alert(data.message);
+                }
+            } catch (err) {
+                console.error('Promo code error:', err);
+                alert('Failed to apply promo code.');
             }
         });
     </script>

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Outfitly.Models;
 
@@ -262,14 +262,19 @@ namespace Outfitly.Data
                     Category = "Bottoms",
                     AvailableColors = new List<Color> { Color.Black, Color.Gray, Color.Navy },
                     ImageUrls = new List<string> { "https://placehold.co/600x400?text=Athletic+Joggers" },
-                    CreatedAt = new DateTime(2024, 1, 9)
                 }
             );
 
             // Seed ProductSizes
-            modelBuilder.Entity<ProductSize>().HasData(
-
-            );
+            var productSizes = new List<ProductSize>();
+            int sizeId = 1;
+            for (int productId = 1; productId <= 20; productId++)
+            {
+                productSizes.Add(new ProductSize { Id = sizeId++, ProductId = productId, Size = "S", Quantity = 10 });
+                productSizes.Add(new ProductSize { Id = sizeId++, ProductId = productId, Size = "M", Quantity = 15 });
+                productSizes.Add(new ProductSize { Id = sizeId++, ProductId = productId, Size = "L", Quantity = 12 });
+            }
+            modelBuilder.Entity<ProductSize>().HasData(productSizes);
         }
     }
 }

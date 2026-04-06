@@ -1,4 +1,4 @@
-﻿namespace Outfitly.Models
+namespace Outfitly.Models
 {
     public class ProductListViewModel
     {
@@ -10,10 +10,10 @@
 
         // Filter properties
         public string? SelectedCategory { get; set; }
+        public string? SelectedSize { get; set; }
+        public string? SelectedColor { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
-        public List<string> SelectedSizes { get; set; } = new List<string>();
-        public List<string> SelectedColors { get; set; } = new List<string>();
         public string SortBy { get; set; } = "featured";
     }
 }

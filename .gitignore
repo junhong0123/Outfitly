@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/wwwroot/articles.parquet
+/wwwroot/customers.parquet
+/wwwroot/sample_submission.parquet
+/wwwroot/transactions_train.parquet

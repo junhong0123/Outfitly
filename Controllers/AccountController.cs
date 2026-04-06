@@ -1,33 +1,138 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Outfitly.Data;
 using Outfitly.Models;
 
 namespace Outfitly.Controllers
 {
+    [Authorize]
     public class AccountController : Controller
     {
-        // GET: Account/Orders
-        public IActionResult Orders(string? status = null, int page = 1)
-        {
-            // TODO: Get actual user orders from database
-            var orders = GetSampleOrders();
+        private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-            // Filter by status if provided
-            if (!string.IsNullOrEmpty(status) && status != "all")
+        public AccountController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
+
+        // GET: Account/Orders
+        public async Task<IActionResult> Orders(string? status = null, int page = 1)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
             {
-                orders = orders.Where(o => o.Status.ToLower() == status.ToLower()).ToList();
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
             }
 
-            // TODO: Implement pagination
-            // var pagedOrders = orders.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var pageSize = 5;
+            var query = _context.Orders
+                .Include(o => o.OrderItems)
+                .Where(o => o.CustomerId == userId);
+
+            if (!string.IsNullOrEmpty(status) && status.ToLower() != "all")
+            {
+                query = query.Where(o => o.Status.ToLower() == status.ToLower());
+            }
+
+            var totalOrders = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalOrders / (double)pageSize);
+
+            // Ensure page is within valid range
+            page = Math.Max(1, Math.Min(page, totalPages > 0 ? totalPages : 1));
+
+            var orders = await query
+                .OrderByDescending(o => o.OrderDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.CurrentStatus = status ?? "all";
 
             return View(orders);
         }
 
-        // GET: Account/OrderDetails/{id}
-        public IActionResult OrderDetails(int id)
+
+
+        // POST: Account/BuyAgain
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BuyAgain(int orderId)
         {
-            // TODO: Get actual order from database
-            var order = GetSampleOrders().FirstOrDefault(o => o.Id == id);
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId);
+
+            if (order == null) return NotFound();
+
+            // Add items to cart
+            foreach (var item in order.OrderItems)
+            {
+                var existingCartItem = await _context.CartItems
+                    .FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == item.ProductId && c.Size == item.Size && c.Color == item.Color);
+
+                if (existingCartItem != null)
+                {
+                    existingCartItem.Quantity += 1;
+                    _context.Update(existingCartItem);
+                }
+                else
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        var newItem = new CartItem
+                        {
+                            UserId = userId,
+                            ProductId = product.Id,
+                            ProductName = product.Name,
+                            Price = product.Price,
+                            Quantity = 1,
+                            Size = item.Size,
+                            Color = item.Color,
+                            ImageUrl = product.ImageUrls?.FirstOrDefault()
+                        };
+                        _context.CartItems.Add(newItem);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index", "Cart");
+        }
+
+        // GET: Account/WriteReview/{productId}
+        public async Task<IActionResult> WriteReview(int productId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null) return NotFound();
+
+            ViewBag.ProductName = product.Name;
+            ViewBag.ProductId = product.Id;
+
+            return View(); // Assumes a WriteReview.cshtml view exists
+        }
+
+        // GET: Account/OrderDetails/{id}
+        public async Task<IActionResult> OrderDetails(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId)) return RedirectToAction("Login", "Account", new { area = "Identity" });
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id && o.CustomerId == userId);
 
             if (order == null)
             {
@@ -37,22 +142,32 @@ namespace Outfitly.Controllers
             return View(order);
         }
 
-        // GET: Account/Profile
-        public IActionResult Profile()
+        // POST: Account/WriteReview
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult WriteReview(int productId, int rating, string reviewText)
         {
-            // TODO: Get actual user profile from database
-            return View();
+            // Placeholder: In a real app, save review to database
+            TempData["SuccessMessage"] = "Thank you for your review!";
+            return RedirectToAction(nameof(Orders));
         }
 
         // POST: Account/CancelOrder
         [HttpPost]
-        public IActionResult CancelOrder(int orderId)
+        public async Task<IActionResult> CancelOrder(int orderId)
         {
-            // TODO: Implement order cancellation logic
-            // 1. Check if order can be cancelled (only if status is "Pending" or "Processing")
-            // 2. Update order status to "Cancelled"
-            // 3. Process refund
-            // 4. Send cancellation email
+            var userId = _userManager.GetUserId(User);
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.CustomerId == userId);
+
+            if (order == null || (order.Status != "Pending" && order.Status != "Processing"))
+            {
+                return Json(new { success = false, message = "Order cannot be cancelled." });
+            }
+
+            order.Status = "Cancelled";
+            _context.Update(order);
+            await _context.SaveChangesAsync();
 
             return Json(new
             {
@@ -65,7 +180,7 @@ namespace Outfitly.Controllers
         [HttpPost]
         public IActionResult TrackOrder(int orderId)
         {
-            // TODO: Get actual tracking information from shipping provider
+            // Placeholder: Get actual tracking information from shipping provider
             var trackingInfo = new
             {
                 trackingNumber = "TRK123456789",
@@ -84,30 +199,49 @@ namespace Outfitly.Controllers
         }
 
         // GET: Account/Dashboard
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            // TODO: Get actual user dashboard data from database
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
+            var orders = await _context.Orders
+                .Where(o => o.CustomerId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var defaultAddress = await _context.SavedAddresses
+                .FirstOrDefaultAsync(a => a.UserId == userId);
+
             var dashboardData = new DashboardViewModel
             {
-                UserName = "John Doe",
-                UserEmail = "john@example.com",
-                TotalOrders = 12,
-                PendingOrders = 2,
-                TotalSpent = 2459.00m,
-                RecentOrders = GetSampleOrders().Take(3).ToList(),
-                DefaultAddress = new ShippingAddress
+                UserName = user.UserName ?? user.Email ?? "User",
+                UserEmail = user.Email ?? "",
+                TotalOrders = orders.Count,
+                PendingOrders = orders.Count(o => o.Status == "Pending" || o.Status == "Processing"),
+                TotalSpent = orders.Sum(o => o.Total),
+                RecentOrders = orders.Take(3).ToList(),
+                DefaultAddress = defaultAddress != null ? new ShippingAddress
                 {
-                    FirstName = "John",
-                    LastName = "Doe",
-                    AddressLine1 = "123 Main Street",
-                    AddressLine2 = "Apartment 4B",
-                    City = "New York",
-                    StateProvince = "NY",
-                    ZipPostalCode = "10001",
-                    Country = "United States",
-                    PhoneNumber = "+1 (555) 123-4567",
-                    Email = "john@example.com"
-                }
+                    FirstName = defaultAddress.FirstName,
+                    LastName = defaultAddress.LastName,
+                    AddressLine1 = defaultAddress.AddressLine1,
+                    AddressLine2 = defaultAddress.AddressLine2,
+                    City = defaultAddress.City,
+                    StateProvince = defaultAddress.State,
+                    ZipPostalCode = defaultAddress.Zip,
+                    Country = defaultAddress.Country,
+                    PhoneNumber = defaultAddress.Phone,
+                    Email = defaultAddress.Email
+                } : null
             };
 
             return View(dashboardData);
