@@ -6,3 +6,5 @@ matplotlib
 fastapi
 uvicorn
 pyarrow
+sqlalchemy
+pyodbc

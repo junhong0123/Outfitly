@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /wwwroot/customers.parquet
 /wwwroot/sample_submission.parquet
 /wwwroot/transactions_train.parquet
+/AI_Engine/db_error.txt
