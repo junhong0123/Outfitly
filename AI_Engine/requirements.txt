@@ -8,3 +8,5 @@ uvicorn
 pyarrow
 sqlalchemy
 pyodbc
+torch
+langchain-google-genai

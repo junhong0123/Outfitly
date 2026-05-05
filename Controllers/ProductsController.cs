@@ -1,17 +1,21 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Outfitly.Data;
 using Outfitly.Models;
+using Outfitly.Services;
 
 namespace Outfitly.Controllers
 {
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AiEngineClient _aiEngineClient;
 
-        public ProductsController(ApplicationDbContext context)
+        public ProductsController(ApplicationDbContext context, AiEngineClient aiEngineClient)
         {
             _context = context;
+            _aiEngineClient = aiEngineClient;
         }
 
         // GET: Products (Product Listing Page)
@@ -109,9 +113,67 @@ namespace Outfitly.Controllers
         // GET: Products/Recommendations (AI Recommendations Page)
         public async Task<IActionResult> Recommendations()
         {
-            // TODO: Implement AI recommendation logic
-            var products = await _context.Products.Take(8).ToListAsync();
-            return View(products);
+            const int recommendationCount = 8;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous-user";
+            var aiResponse = await _aiEngineClient.GetRecommendationsAsync(userId, recommendationCount);
+
+            var recommendedIds = aiResponse?.Recommendations
+                .Select(item => item.ProductId)
+                .Distinct()
+                .ToList() ?? new List<int>();
+
+            var products = await LoadProductsInRecommendationOrderAsync(recommendedIds);
+            var isAiPowered = products.Any() && recommendedIds.Any();
+
+            if (products.Count < recommendationCount)
+            {
+                var fallbackProducts = await LoadFallbackProductsAsync(
+                    recommendationCount - products.Count,
+                    products.Select(product => product.Id).ToHashSet());
+                products.AddRange(fallbackProducts);
+            }
+
+            var viewModel = new AiRecommendationsViewModel
+            {
+                Products = products,
+                IsAiPowered = isAiPowered,
+                ColdStart = aiResponse?.ColdStart ?? true,
+                StatusMessage = isAiPowered
+                    ? "Personalized by the Outfitly Two-Tower recommendation model."
+                    : "Showing popular products while the AI recommendation service is unavailable."
+            };
+
+            return View(viewModel);
+        }
+
+        private async Task<List<Product>> LoadProductsInRecommendationOrderAsync(List<int> recommendedIds)
+        {
+            if (!recommendedIds.Any())
+            {
+                return new List<Product>();
+            }
+
+            var products = await _context.Products
+                .Include(product => product.ProductSizes)
+                .Where(product => recommendedIds.Contains(product.Id))
+                .ToListAsync();
+
+            var productById = products.ToDictionary(product => product.Id);
+            return recommendedIds
+                .Where(productById.ContainsKey)
+                .Select(productId => productById[productId])
+                .ToList();
+        }
+
+        private async Task<List<Product>> LoadFallbackProductsAsync(int take, HashSet<int> excludedProductIds)
+        {
+            return await _context.Products
+                .Include(product => product.ProductSizes)
+                .Where(product => !excludedProductIds.Contains(product.Id))
+                .OrderByDescending(product => product.CreatedAt)
+                .ThenByDescending(product => product.Id)
+                .Take(take)
+                .ToListAsync();
         }
     }
 }

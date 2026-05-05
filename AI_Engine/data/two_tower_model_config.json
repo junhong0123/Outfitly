@@ -1,0 +1,7 @@
+{
+  "emb_dim": 64,
+  "out_dim": 128,
+  "hidden_dim": 256,
+  "tag_emb_dim": 32,
+  "dropout": 0.1
+}

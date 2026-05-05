@@ -1,0 +1,89 @@
+@using Outfitly.Models
+@model AiRecommendationsViewModel
+@{
+    ViewData["Title"] = "AI Recommendations";
+}
+
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <nav class="flex text-sm text-gray-600">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="hover:text-black">Home</a>
+            <span class="mx-2">/</span>
+            <a asp-area="" asp-controller="Products" asp-action="Index" class="hover:text-black">Shop</a>
+            <span class="mx-2">/</span>
+            <span class="text-black">AI Recommendations</span>
+        </nav>
+    </div>
+</div>
+
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+        <div>
+            <p class="text-xs tracking-[0.3em] uppercase text-gray-500 mb-3">Outfitly Intelligence</p>
+            <h1 class="text-4xl md:text-5xl font-light text-black mb-4">Recommended For You</h1>
+            <p class="text-sm text-gray-600 max-w-2xl">@Model.StatusMessage</p>
+        </div>
+
+        <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-xs text-gray-700">
+            @if (Model.IsAiPowered)
+            {
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span>@(Model.ColdStart ? "AI cold-start profile" : "Personalized AI results")</span>
+            }
+            else
+            {
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span>Fallback products</span>
+            }
+        </div>
+    </div>
+
+    @if (Model.Products.Any())
+    {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+            @foreach (var product in Model.Products)
+            {
+                <a asp-area="" asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                   class="group cursor-pointer product-card">
+                    <div class="bg-gray-100 aspect-[3/4] mb-3 relative overflow-hidden">
+                        @{
+                            var firstImage = product.ImageUrls?.FirstOrDefault();
+                            var hasRealImage = !string.IsNullOrEmpty(firstImage) && !firstImage.Contains("placehold.co");
+                        }
+                        @if (hasRealImage)
+                        {
+                            <img src="@firstImage" alt="@product.Name"
+                                 class="absolute inset-0 w-full h-full object-cover"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <div class="absolute inset-0 items-center justify-center flex-col gap-2 hidden">
+                                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                <span class="text-gray-400 text-xs text-center px-4">@product.Name</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="absolute inset-0 flex items-center justify-center flex-col gap-2">
+                                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                                <span class="text-gray-400 text-xs text-center px-4">@product.Name</span>
+                            </div>
+                        }
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-5 transition duration-300"></div>
+                    </div>
+                    <h3 class="text-sm font-light text-black mb-1">@product.Name</h3>
+                    <p class="text-xs text-gray-600">$@product.Price.ToString("F2")</p>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-20 border border-dashed border-gray-300">
+            <p class="text-gray-500 text-lg mb-2">No recommendations available</p>
+            <a asp-area="" asp-controller="Products" asp-action="Index" class="text-sm text-black underline">Browse all products</a>
+        </div>
+    }
+</section>

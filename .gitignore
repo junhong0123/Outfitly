@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /wwwroot/sample_submission.parquet
 /wwwroot/transactions_train.parquet
 /AI_Engine/db_error.txt
+/AI_Engine/data/two_tower_model.pth
