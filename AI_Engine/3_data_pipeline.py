@@ -56,6 +56,7 @@ def get_engine():
 
 def prepare_training_artifacts(
     articles: pd.DataFrame,
+    customers: pd.DataFrame,
     transactions: pd.DataFrame,
     interaction_limit: int | None,
     seed: int,
@@ -64,7 +65,8 @@ def prepare_training_artifacts(
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     articles = articles.drop_duplicates(subset=["article_id"], keep="first").copy()
-    transaction_view = transactions[["customer_id", "article_id", "price"]]
+    transaction_view = transactions[["t_dat", "customer_id", "article_id", "price", "sales_channel_id"]].copy()
+    transaction_view["t_dat"] = pd.to_datetime(transaction_view["t_dat"])
     if interaction_limit is not None and len(transaction_view) > interaction_limit:
         transaction_view = transaction_view.sample(interaction_limit, random_state=seed)
         print(f"Training artifacts limited to {interaction_limit:,} sampled interactions.")
@@ -124,25 +126,88 @@ def prepare_training_artifacts(
     item_source["NormPrice"] = price_scaler.fit_transform(item_source[["Price"]].fillna(0))
     item_source["NormPopularity"] = popularity_scaler.fit_transform(item_source[["Popularity"]].fillna(0))
 
+    item_lookup = item_source.set_index("Id")
     user_agg = (
         transaction_view.groupby("customer_id", as_index=False, sort=False)["price"]
         .mean()
         .rename(columns={"customer_id": "UserId", "price": "AvgPurchasePrice"})
     )
-    user_le = LabelEncoder()
+    user_agg["PurchaseCount"] = user_agg["UserId"].map(transaction_view["customer_id"].value_counts()).fillna(0)
+    unique_item_counts = transaction_view.groupby("customer_id", sort=False)["article_id"].nunique()
+    user_agg["UniqueItemCount"] = user_agg["UserId"].map(unique_item_counts).fillna(0)
+    avg_item_popularity = (
+        transaction_view["article_id"]
+        .astype("int64", copy=False)
+        .map(item_lookup["NormPopularity"])
+        .groupby(transaction_view["customer_id"], sort=False)
+        .mean()
+    )
+    user_agg["AvgItemPopularity"] = user_agg["UserId"].map(avg_item_popularity).fillna(0)
+
+    latest_transactions = transaction_view.sort_values("t_dat").drop_duplicates("customer_id", keep="last")
+    latest_article_ids = latest_transactions.set_index("customer_id")["article_id"].astype("int64", copy=False)
+    user_agg["RecentCategoryIdx"] = user_agg["UserId"].map(latest_article_ids.map(item_lookup["CategoryIdx"])).fillna(0)
+    user_agg["RecentColorIdx"] = user_agg["UserId"].map(latest_article_ids.map(item_lookup["ColorIdx"])).fillna(0)
+    user_agg["RecentProductGroupIdx"] = (
+        user_agg["UserId"].map(latest_article_ids.map(item_lookup["ProductGroupIdx"])).fillna(0)
+    )
+    user_agg["RecentSectionIdx"] = user_agg["UserId"].map(latest_article_ids.map(item_lookup["SectionIdx"])).fillna(0)
+    user_agg["RecentGarmentGroupIdx"] = (
+        user_agg["UserId"].map(latest_article_ids.map(item_lookup["GarmentGroupIdx"])).fillna(0)
+    )
+    user_agg["RecentSalesChannelIdx"] = (
+        user_agg["UserId"].map(latest_transactions.set_index("customer_id")["sales_channel_id"]).fillna(0).astype(int)
+    )
+
+    customer_features = customers[
+        ["customer_id", "FN", "Active", "club_member_status", "fashion_news_frequency", "age"]
+    ].copy()
+    customer_features["UserId"] = customer_features["customer_id"].astype("string")
     user_agg["UserId"] = user_agg["UserId"].astype("string")
+    user_agg = user_agg.merge(
+        customer_features.drop(columns=["customer_id"]),
+        on="UserId",
+        how="left",
+    )
+
+    club_status_le = LabelEncoder()
+    fashion_frequency_le = LabelEncoder()
+    user_agg["ClubStatusIdx"] = club_status_le.fit_transform(
+        user_agg["club_member_status"].fillna("UNKNOWN").astype(str)
+    )
+    user_agg["FashionFrequencyIdx"] = fashion_frequency_le.fit_transform(
+        user_agg["fashion_news_frequency"].fillna("UNKNOWN").astype(str)
+    )
+    age_values = user_agg["age"].fillna(user_agg["age"].median()).fillna(0)
+    age_scaler = MinMaxScaler()
+    purchase_count_scaler = MinMaxScaler()
+    unique_item_count_scaler = MinMaxScaler()
+    avg_item_popularity_scaler = MinMaxScaler()
+    user_agg["NormAge"] = age_scaler.fit_transform(age_values.to_frame("age"))
+    user_agg["NormPurchaseCount"] = purchase_count_scaler.fit_transform(np.log1p(user_agg[["PurchaseCount"]]))
+    user_agg["NormUniqueItemCount"] = unique_item_count_scaler.fit_transform(np.log1p(user_agg[["UniqueItemCount"]]))
+    user_agg["NormAvgItemPopularity"] = avg_item_popularity_scaler.fit_transform(
+        user_agg[["AvgItemPopularity"]].fillna(0)
+    )
+    user_agg["FNFlag"] = user_agg["FN"].fillna(0).astype(float)
+    user_agg["ActiveFlag"] = user_agg["Active"].fillna(0).astype(float)
+
+    user_le = LabelEncoder()
     user_agg["UserIndex"] = user_le.fit_transform(user_agg["UserId"])
     user_price_scaler = MinMaxScaler()
     user_agg["NormAvgPrice"] = user_price_scaler.fit_transform(user_agg[["AvgPurchasePrice"]].fillna(0))
 
-    train_data = transaction_view[["customer_id", "article_id"]].rename(
+    train_data = transaction_view[["customer_id", "article_id", "t_dat", "sales_channel_id"]].rename(
         columns={"customer_id": "UserId", "article_id": "ProductId"}
     )
     train_data["UserId"] = train_data["UserId"].astype("string")
     train_data["ProductId"] = train_data["ProductId"].astype("int64", copy=False)
     train_data["UserIndex"] = user_le.transform(train_data["UserId"])
     train_data["ItemIndex"] = item_le.transform(train_data["ProductId"])
-    train_data = train_data[["UserIndex", "ItemIndex"]]
+    train_data["TDat"] = pd.to_datetime(train_data["t_dat"]).dt.strftime("%Y-%m-%d")
+    train_data["SalesChannelId"] = train_data["sales_channel_id"].astype(int)
+    train_data = train_data.sort_values("TDat").drop_duplicates(["UserIndex", "ItemIndex"], keep="last")
+    train_data = train_data[["UserIndex", "ItemIndex", "TDat", "SalesChannelId"]]
 
     item_source[
         [
@@ -161,7 +226,27 @@ def prepare_training_artifacts(
         DATA_DIR / "item_features.csv",
         index=False,
     )
-    user_agg[["UserIndex", "UserId", "NormAvgPrice"]].to_csv(DATA_DIR / "user_features.csv", index=False)
+    user_agg[
+        [
+            "UserIndex",
+            "UserId",
+            "NormAvgPrice",
+            "NormAge",
+            "FNFlag",
+            "ActiveFlag",
+            "ClubStatusIdx",
+            "FashionFrequencyIdx",
+            "RecentCategoryIdx",
+            "RecentColorIdx",
+            "RecentProductGroupIdx",
+            "RecentSectionIdx",
+            "RecentGarmentGroupIdx",
+            "RecentSalesChannelIdx",
+            "NormPurchaseCount",
+            "NormUniqueItemCount",
+            "NormAvgItemPopularity",
+        ]
+    ].to_csv(DATA_DIR / "user_features.csv", index=False)
     train_data.to_csv(DATA_DIR / "train_interactions.csv", index=False)
 
     encoders = {
@@ -172,10 +257,16 @@ def prepare_training_artifacts(
         "product_group_le": product_group_le,
         "section_le": section_le,
         "garment_group_le": garment_group_le,
+        "club_status_le": club_status_le,
+        "fashion_frequency_le": fashion_frequency_le,
         "user_le": user_le,
         "price_scaler": price_scaler,
         "popularity_scaler": popularity_scaler,
         "user_price_scaler": user_price_scaler,
+        "age_scaler": age_scaler,
+        "purchase_count_scaler": purchase_count_scaler,
+        "unique_item_count_scaler": unique_item_count_scaler,
+        "avg_item_popularity_scaler": avg_item_popularity_scaler,
     }
     pd.to_pickle(encoders, DATA_DIR / "encoders.pkl")
 
@@ -495,7 +586,7 @@ def main() -> None:
     if not args.skip_training_artifacts:
         print("Writing full training artifacts...")
         training_limit = None if args.training_interaction_limit == 0 else args.training_interaction_limit
-        prepare_training_artifacts(articles, transactions, training_limit, args.seed)
+        prepare_training_artifacts(articles, customers, transactions, training_limit, args.seed)
 
     print("Preparing deduplicated storefront subset...")
     products = prepare_storefront_products(articles, transactions, args.storefront_product_limit)

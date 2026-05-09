@@ -26,6 +26,26 @@ from torch.utils.data import DataLoader, Dataset, Subset
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = SCRIPT_DIR / "data"
 
+USER_FLOAT_COLUMNS = [
+    ("user_norm_price", "NormAvgPrice"),
+    ("user_norm_age", "NormAge"),
+    ("user_fn", "FNFlag"),
+    ("user_active", "ActiveFlag"),
+    ("user_norm_purchase_count", "NormPurchaseCount"),
+    ("user_norm_unique_item_count", "NormUniqueItemCount"),
+    ("user_norm_avg_item_popularity", "NormAvgItemPopularity"),
+]
+USER_LONG_COLUMNS = [
+    ("user_club_status", "ClubStatusIdx"),
+    ("user_fashion_frequency", "FashionFrequencyIdx"),
+    ("user_recent_category", "RecentCategoryIdx"),
+    ("user_recent_color", "RecentColorIdx"),
+    ("user_recent_product_group", "RecentProductGroupIdx"),
+    ("user_recent_section", "RecentSectionIdx"),
+    ("user_recent_garment_group", "RecentGarmentGroupIdx"),
+    ("user_recent_sales_channel", "RecentSalesChannelIdx"),
+]
+
 
 def _load_two_tower_model_class():
     """Load TwoTowerModel from 4_modeling.py even though the filename starts with a number."""
@@ -66,6 +86,21 @@ class PositivePairDataset(Dataset):
         self.user_price[
             torch.tensor(user_features["UserIndex"].to_numpy(), dtype=torch.long)
         ] = torch.tensor(user_features["NormAvgPrice"].to_numpy(), dtype=torch.float32)
+        self.user_float_features: dict[str, torch.Tensor] = {"user_norm_price": self.user_price}
+        self.user_long_features: dict[str, torch.Tensor] = {}
+        user_indices = torch.tensor(user_features["UserIndex"].to_numpy(), dtype=torch.long)
+        for key, column in USER_FLOAT_COLUMNS:
+            if key == "user_norm_price":
+                continue
+            values = torch.zeros(max_user_idx + 1, dtype=torch.float32)
+            if column in user_features:
+                values[user_indices] = torch.tensor(user_features[column].fillna(0).to_numpy(), dtype=torch.float32)
+            self.user_float_features[key] = values
+        for key, column in USER_LONG_COLUMNS:
+            values = torch.zeros(max_user_idx + 1, dtype=torch.long)
+            if column in user_features:
+                values[user_indices] = torch.tensor(user_features[column].fillna(0).to_numpy(), dtype=torch.long)
+            self.user_long_features[key] = values
 
         max_item_idx = int(item_features["ItemIndex"].max())
         self.item_cat = torch.zeros(max_item_idx + 1, dtype=torch.long)
@@ -108,7 +143,7 @@ class PositivePairDataset(Dataset):
         """Return one training example with user features and item features."""
         user_idx = self.user_idx[index]
         item_idx = self.item_idx[index]
-        return {
+        example = {
             "user_idx": user_idx,
             "user_norm_price": self.user_price[user_idx],
             "item_idx": item_idx,
@@ -121,24 +156,30 @@ class PositivePairDataset(Dataset):
             "item_norm_price": self.item_price[item_idx],
             "item_popularity": self.item_popularity[item_idx],
         }
+        for key, values in self.user_float_features.items():
+            if key != "user_norm_price":
+                example[key] = values[user_idx]
+        for key, values in self.user_long_features.items():
+            example[key] = values[user_idx]
+        return example
 
 
 def parse_args() -> argparse.Namespace:
     """Read command-line options for model training."""
     parser = argparse.ArgumentParser(description="Train Outfitly two-tower model")
     parser.add_argument("--data-dir", default=str(DATA_DIR))
-    parser.add_argument("--epochs", type=int, default=15)
-    parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--max-interactions", type=int, default=0, help="0 means use all prepared interactions")
     parser.add_argument("--validation-ratio", type=float, default=0.05)
-    parser.add_argument("--min-user-interactions", type=int, default=2)
-    parser.add_argument("--min-item-interactions", type=int, default=1)
+    parser.add_argument("--min-user-interactions", type=int, default=3)
+    parser.add_argument("--min-item-interactions", type=int, default=5)
     parser.add_argument(
         "--validation-strategy",
-        choices=["user-holdout", "random"],
-        default="user-holdout",
+        choices=["user-holdout", "random", "temporal"],
+        default="temporal",
         help="Hold out purchases from users that remain represented in training.",
     )
     parser.add_argument("--num-workers", type=int, default=0)
@@ -160,8 +201,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--recall-batch-size",
         type=int,
-        default=64,
+        default=128,
         help="Validation batch size used for Recall@K scoring against all items.",
+    )
+    parser.add_argument(
+        "--max-metric-validation-pairs",
+        type=int,
+        default=50000,
+        help="Maximum validation rows used for expensive Recall/MAP metrics. Use 0 for all rows.",
+    )
+    parser.add_argument(
+        "--max-validation-loss-pairs",
+        type=int,
+        default=100000,
+        help="Maximum validation rows used for validation loss. Use 0 for all rows.",
     )
     parser.add_argument(
         "--selection-metric",
@@ -192,6 +245,9 @@ def parse_args() -> argparse.Namespace:
         default=0.001,
         help="Minimum validation loss improvement required to reset early stopping.",
     )
+    parser.add_argument("--amp", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--hard-negative-count", type=int, default=128)
+    parser.add_argument("--hard-negative-pool-size", type=int, default=4096)
     return parser.parse_args()
 
 
@@ -267,6 +323,22 @@ def make_train_validation_indices(
         train_indices = [index for index in range(row_count) if index not in validation_set]
         return train_indices, validation_indices
 
+    if strategy == "temporal":
+        if "TDat" not in interactions:
+            raise RuntimeError("Temporal validation requires a TDat column in train_interactions.csv.")
+        dated = interactions[["UserIndex", "TDat"]].copy()
+        dated["_row_index"] = np.arange(row_count)
+        dated["TDat"] = pd.to_datetime(dated["TDat"])
+        latest_by_user = dated.sort_values("TDat").drop_duplicates("UserIndex", keep="last")
+        if latest_by_user.empty:
+            raise RuntimeError("No temporal validation candidates were found.")
+        target_validation_size = min(target_validation_size, len(latest_by_user))
+        latest_by_user = latest_by_user.sort_values(["TDat", "_row_index"], ascending=[False, True])
+        validation_indices = sorted(latest_by_user["_row_index"].head(target_validation_size).astype(int).tolist())
+        validation_set = set(validation_indices)
+        train_indices = [index for index in range(row_count) if index not in validation_set]
+        return train_indices, validation_indices
+
     validation_candidates = []
     for group_indices in interactions.groupby("UserIndex", sort=False).indices.values():
         if len(group_indices) > 1:
@@ -284,9 +356,53 @@ def make_train_validation_indices(
     return train_indices, validation_indices
 
 
-def batch_loss(model: TwoTowerModel, batch: dict[str, torch.Tensor], temperature: float) -> torch.Tensor:
-    """Calculate in-batch contrastive loss for matching users to their purchased items."""
-    user_vectors = model.encode_user(batch["user_idx"], batch["user_norm_price"])
+def encode_user_from_batch(model: TwoTowerModel, batch: dict[str, torch.Tensor]) -> torch.Tensor:
+    """Encode users from the standard batch dictionary."""
+    return model.encode_user(
+        batch["user_idx"],
+        batch["user_norm_price"],
+        batch.get("user_norm_age"),
+        batch.get("user_fn"),
+        batch.get("user_active"),
+        batch.get("user_club_status"),
+        batch.get("user_fashion_frequency"),
+        batch.get("user_recent_category"),
+        batch.get("user_recent_color"),
+        batch.get("user_recent_product_group"),
+        batch.get("user_recent_section"),
+        batch.get("user_recent_garment_group"),
+        batch.get("user_recent_sales_channel"),
+        batch.get("user_norm_purchase_count"),
+        batch.get("user_norm_unique_item_count"),
+        batch.get("user_norm_avg_item_popularity"),
+    )
+
+
+def multi_positive_loss(logits: torch.Tensor, positive_mask: torch.Tensor) -> torch.Tensor:
+    """Compute softmax loss where each row can have multiple positive columns."""
+    valid_rows = positive_mask.any(dim=1)
+    if not bool(valid_rows.any()):
+        return logits.sum() * 0
+    row_logits = logits[valid_rows]
+    row_mask = positive_mask[valid_rows]
+    positive_logits = row_logits.masked_fill(~row_mask, float("-inf"))
+    return (torch.logsumexp(row_logits, dim=1) - torch.logsumexp(positive_logits, dim=1)).mean()
+
+
+def gather_item_batch(item_tensors: dict[str, torch.Tensor], positions: torch.Tensor) -> dict[str, torch.Tensor]:
+    """Gather item feature tensors by row position from a candidate pool."""
+    return {key: value[positions] for key, value in item_tensors.items()}
+
+
+def batch_loss(
+    model: TwoTowerModel,
+    batch: dict[str, torch.Tensor],
+    temperature: float,
+    hard_negative_tensors: dict[str, torch.Tensor] | None = None,
+    hard_negative_count: int = 0,
+) -> torch.Tensor:
+    """Calculate multi-positive contrastive loss with optional popular hard negatives."""
+    user_vectors = encode_user_from_batch(model, batch)
     item_vectors = model.encode_item(
         batch["item_idx"],
         batch["item_cat"],
@@ -299,9 +415,44 @@ def batch_loss(model: TwoTowerModel, batch: dict[str, torch.Tensor], temperature
         batch.get("item_popularity"),
     )
     logits = torch.matmul(user_vectors, item_vectors.t()) / temperature
-    labels = torch.arange(logits.size(0), device=logits.device)
-    user_to_item = nn.functional.cross_entropy(logits, labels)
-    item_to_user = nn.functional.cross_entropy(logits.t(), labels)
+    user_positive_mask = batch["user_idx"].unsqueeze(1) == batch["user_idx"].unsqueeze(0)
+    if hard_negative_tensors is not None and hard_negative_count > 0 and len(hard_negative_tensors["item_idx"]) > 0:
+        negative_positions = torch.randint(
+            0,
+            len(hard_negative_tensors["item_idx"]),
+            (hard_negative_count,),
+            device=batch["user_idx"].device,
+        )
+        negative_batch = gather_item_batch(hard_negative_tensors, negative_positions)
+        negative_vectors = model.encode_item(
+            negative_batch["item_idx"],
+            negative_batch["item_cat"],
+            negative_batch["item_color"],
+            negative_batch["item_graphic"],
+            negative_batch["item_norm_price"],
+            negative_batch["item_product_group"],
+            negative_batch["item_section"],
+            negative_batch["item_garment_group"],
+            negative_batch["item_popularity"],
+        )
+        negative_logits = torch.matmul(user_vectors, negative_vectors.t()) / temperature
+        target_matches = negative_batch["item_idx"].unsqueeze(0) == batch["item_idx"].unsqueeze(1)
+        negative_logits = negative_logits.masked_fill(target_matches, float("-inf"))
+        logits = torch.cat([logits, negative_logits], dim=1)
+        user_positive_mask = torch.cat(
+            [
+                user_positive_mask,
+                torch.zeros(
+                    (user_positive_mask.size(0), negative_logits.size(1)),
+                    dtype=torch.bool,
+                    device=user_positive_mask.device,
+                ),
+            ],
+            dim=1,
+        )
+    user_to_item = multi_positive_loss(logits, user_positive_mask)
+    item_positive_mask = batch["item_idx"].unsqueeze(1) == batch["item_idx"].unsqueeze(0)
+    item_to_user = multi_positive_loss(torch.matmul(item_vectors, user_vectors.t()) / temperature, item_positive_mask)
     return (user_to_item + item_to_user) / 2
 
 
@@ -364,6 +515,20 @@ def build_seen_lookup(dataset: PositivePairDataset, indices: list[int]) -> dict[
         item_idx = int(dataset.item_idx[index])
         seen.setdefault(user_idx, set()).add(item_idx)
     return seen
+
+
+def build_user_feature_batch(
+    dataset: PositivePairDataset,
+    user_idx_cpu: torch.Tensor,
+    device: torch.device,
+) -> dict[str, torch.Tensor]:
+    """Build a model-ready user feature batch from user indices."""
+    batch = {"user_idx": user_idx_cpu.to(device)}
+    for key, values in dataset.user_float_features.items():
+        batch[key] = values[user_idx_cpu].to(device)
+    for key, values in dataset.user_long_features.items():
+        batch[key] = values[user_idx_cpu].to(device)
+    return batch
 
 
 def load_storefront_item_indices(data_dir: Path, item_features: pd.DataFrame) -> set[int]:
@@ -500,9 +665,7 @@ def recall_at_ks(
         batch_index_tensor = torch.tensor(batch_indices, dtype=torch.long)
         user_idx_cpu = dataset.user_idx[batch_index_tensor]
         target_item_cpu = dataset.item_idx[batch_index_tensor]
-        user_price_cpu = dataset.user_price[user_idx_cpu]
-
-        user_vectors = model.encode_user(user_idx_cpu.to(device), user_price_cpu.to(device))
+        user_vectors = encode_user_from_batch(model, build_user_feature_batch(dataset, user_idx_cpu, device))
         scores = torch.matmul(user_vectors, item_vectors.t())
 
         for row, user_idx in enumerate(user_idx_cpu.tolist()):
@@ -594,9 +757,7 @@ def map_at_ks(
     for start in range(0, len(user_indices), batch_size):
         batch_users = user_indices[start : start + batch_size]
         user_idx_cpu = torch.tensor(batch_users, dtype=torch.long)
-        user_price_cpu = dataset.user_price[user_idx_cpu]
-
-        user_vectors = model.encode_user(user_idx_cpu.to(device), user_price_cpu.to(device))
+        user_vectors = encode_user_from_batch(model, build_user_feature_batch(dataset, user_idx_cpu, device))
         scores = torch.matmul(user_vectors, item_vectors.t())
 
         for row, user_idx in enumerate(batch_users):
@@ -679,8 +840,19 @@ def main() -> None:
         args.seed,
         args.validation_strategy,
     )
+    rng = np.random.default_rng(args.seed)
+    loss_validation_indices = validation_indices
+    if args.max_validation_loss_pairs > 0 and len(loss_validation_indices) > args.max_validation_loss_pairs:
+        loss_validation_indices = sorted(
+            rng.choice(loss_validation_indices, size=args.max_validation_loss_pairs, replace=False).astype(int).tolist()
+        )
+    metric_validation_indices = validation_indices
+    if args.max_metric_validation_pairs > 0 and len(metric_validation_indices) > args.max_metric_validation_pairs:
+        metric_validation_indices = sorted(
+            rng.choice(metric_validation_indices, size=args.max_metric_validation_pairs, replace=False).astype(int).tolist()
+        )
     train_dataset = Subset(dataset, train_indices)
-    validation_dataset = Subset(dataset, validation_indices)
+    validation_dataset = Subset(dataset, loss_validation_indices)
 
     train_loader = DataLoader(
         train_dataset,
@@ -709,6 +881,14 @@ def main() -> None:
         num_product_groups=optional_feature_count(item_features, "ProductGroupIdx"),
         num_sections=optional_feature_count(item_features, "SectionIdx"),
         num_garment_groups=optional_feature_count(item_features, "GarmentGroupIdx"),
+        num_club_statuses=optional_feature_count(user_features, "ClubStatusIdx"),
+        num_fashion_frequencies=optional_feature_count(user_features, "FashionFrequencyIdx"),
+        num_recent_categories=optional_feature_count(user_features, "RecentCategoryIdx"),
+        num_recent_colors=optional_feature_count(user_features, "RecentColorIdx"),
+        num_recent_product_groups=optional_feature_count(user_features, "RecentProductGroupIdx"),
+        num_recent_sections=optional_feature_count(user_features, "RecentSectionIdx"),
+        num_recent_garment_groups=optional_feature_count(user_features, "RecentGarmentGroupIdx"),
+        num_sales_channels=optional_feature_count(user_features, "RecentSalesChannelIdx"),
         use_item_popularity="NormPopularity" in item_features,
         **asdict(config),
     )
@@ -717,6 +897,12 @@ def main() -> None:
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     all_item_tensors = build_item_tensors(item_features, device)
+    hard_negative_tensors = None
+    if args.hard_negative_count > 0 and args.hard_negative_pool_size > 0:
+        hard_negative_item_indices = set(
+            item_features.nlargest(args.hard_negative_pool_size, "NormPopularity")["ItemIndex"].astype(int).tolist()
+        )
+        hard_negative_tensors = build_item_tensors(item_features, device, hard_negative_item_indices)
     storefront_item_indices = load_storefront_item_indices(data_dir, item_features)
     storefront_item_tensors = (
         build_item_tensors(item_features, device, storefront_item_indices)
@@ -725,7 +911,7 @@ def main() -> None:
     )
     storefront_validation_indices = filter_validation_indices_by_items(
         dataset,
-        validation_indices,
+        metric_validation_indices,
         storefront_item_indices,
     )
     train_seen_items = build_seen_lookup(dataset, train_indices)
@@ -735,7 +921,11 @@ def main() -> None:
     checkpoint_dir = Path(args.checkpoint_dir)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"Training on {device}: {len(train_dataset):,} train pairs, {len(validation_dataset):,} validation pairs")
+    print(
+        f"Training on {device}: {len(train_dataset):,} train pairs, "
+        f"{len(validation_indices):,} validation pairs "
+        f"({len(loss_validation_indices):,} loss, {len(metric_validation_indices):,} metric)"
+    )
     if recall_ks:
         print(f"Recall metrics enabled for K={recall_ks}.")
         if args.popularity_rerank_weight > 0:
@@ -754,6 +944,13 @@ def main() -> None:
             print("Storefront recall disabled because storefront_product_ids.csv was not found or empty.")
     if map_ks:
         print(f"MAP metrics enabled for K={map_ks}.")
+    if hard_negative_tensors is not None:
+        print(
+            "Popular hard negatives enabled: "
+            f"count={args.hard_negative_count}, pool={len(hard_negative_tensors['item_idx']):,}"
+        )
+    amp_enabled = bool(args.amp and device.type == "cuda")
+    scaler = torch.cuda.amp.GradScaler(enabled=amp_enabled)
     epochs_without_improvement = 0
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -761,10 +958,19 @@ def main() -> None:
         for step, batch in enumerate(train_loader, start=1):
             batch = move_batch(batch, device)
             optimizer.zero_grad(set_to_none=True)
-            loss = batch_loss(model, batch, args.temperature)
-            loss.backward()
+            with torch.cuda.amp.autocast(enabled=amp_enabled):
+                loss = batch_loss(
+                    model,
+                    batch,
+                    args.temperature,
+                    hard_negative_tensors,
+                    args.hard_negative_count,
+                )
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
             nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
             running_loss += loss.item()
 
             if step % 100 == 0:
@@ -776,7 +982,7 @@ def main() -> None:
             recall_at_ks(
                 model,
                 dataset,
-                validation_indices,
+                metric_validation_indices,
                 all_item_tensors,
                 train_seen_items,
                 device,
@@ -808,7 +1014,7 @@ def main() -> None:
             map_at_ks(
                 model,
                 dataset,
-                validation_indices,
+                metric_validation_indices,
                 all_item_tensors,
                 train_seen_items,
                 device,

@@ -9,6 +9,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
 
@@ -37,10 +38,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default=str(DATA_DIR))
     parser.add_argument("--checkpoint", default=str(DATA_DIR / "two_tower_model.pth"))
     parser.add_argument("--validation-ratio", type=float, default=0.05)
-    parser.add_argument("--validation-strategy", choices=["user-holdout", "random"], default="user-holdout")
+    parser.add_argument("--validation-strategy", choices=["user-holdout", "random", "temporal"], default="temporal")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--min-user-interactions", type=int, default=2)
-    parser.add_argument("--min-item-interactions", type=int, default=1)
+    parser.add_argument("--min-user-interactions", type=int, default=3)
+    parser.add_argument("--min-item-interactions", type=int, default=5)
     parser.add_argument("--max-interactions", type=int, default=0)
     parser.add_argument("--recall-ks", default="10,50,100")
     parser.add_argument("--map-ks", default="12")
@@ -50,6 +51,7 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated top-popular candidate pool sizes to evaluate, or 0 to disable.",
     )
     parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--max-metric-validation-pairs", type=int, default=50000)
     parser.add_argument("--popularity-rerank-weight", type=float, default=0.80)
     parser.add_argument("--rerank-candidate-pool", type=int, default=3000)
     parser.add_argument("--output-json", default="")
@@ -218,6 +220,11 @@ def main() -> None:
         args.seed,
         args.validation_strategy,
     )
+    if args.max_metric_validation_pairs > 0 and len(validation_indices) > args.max_metric_validation_pairs:
+        rng = np.random.default_rng(args.seed)
+        validation_indices = sorted(
+            rng.choice(validation_indices, size=args.max_metric_validation_pairs, replace=False).astype(int).tolist()
+        )
     train_seen_items = train.build_seen_lookup(dataset, train_indices)
 
     checkpoint = torch.load(checkpoint_path, map_location="cpu")
@@ -231,6 +238,14 @@ def main() -> None:
         num_product_groups=train.optional_feature_count(item_features, "ProductGroupIdx"),
         num_sections=train.optional_feature_count(item_features, "SectionIdx"),
         num_garment_groups=train.optional_feature_count(item_features, "GarmentGroupIdx"),
+        num_club_statuses=train.optional_feature_count(user_features, "ClubStatusIdx"),
+        num_fashion_frequencies=train.optional_feature_count(user_features, "FashionFrequencyIdx"),
+        num_recent_categories=train.optional_feature_count(user_features, "RecentCategoryIdx"),
+        num_recent_colors=train.optional_feature_count(user_features, "RecentColorIdx"),
+        num_recent_product_groups=train.optional_feature_count(user_features, "RecentProductGroupIdx"),
+        num_recent_sections=train.optional_feature_count(user_features, "RecentSectionIdx"),
+        num_recent_garment_groups=train.optional_feature_count(user_features, "RecentGarmentGroupIdx"),
+        num_sales_channels=train.optional_feature_count(user_features, "RecentSalesChannelIdx"),
         use_item_popularity="NormPopularity" in item_features,
         **model_config,
     )

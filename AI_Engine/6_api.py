@@ -114,6 +114,19 @@ def _extra_model_kwargs_from_checkpoint(state_dict: dict[str, torch.Tensor]) -> 
     tag_count = 6 if required_keys[0] in state_dict else 3
     dense_input_dim = state_dict["item_dense.0.weight"].shape[1]
     extra_kwargs["use_item_popularity"] = dense_input_dim - emb_dim - tag_emb_dim * tag_count == 2
+    user_optional_keys = {
+        "num_club_statuses": "club_status_emb.weight",
+        "num_fashion_frequencies": "fashion_frequency_emb.weight",
+        "num_recent_categories": "recent_category_emb.weight",
+        "num_recent_colors": "recent_color_emb.weight",
+        "num_recent_product_groups": "recent_product_group_emb.weight",
+        "num_recent_sections": "recent_section_emb.weight",
+        "num_recent_garment_groups": "recent_garment_group_emb.weight",
+        "num_sales_channels": "recent_sales_channel_emb.weight",
+    }
+    for kwarg, key in user_optional_keys.items():
+        if key in state_dict:
+            extra_kwargs[kwarg] = int(state_dict[key].shape[0])
     return extra_kwargs
 
 
@@ -144,6 +157,48 @@ def _item_feature_tensor(item_features: pd.DataFrame, column: str, dtype: torch.
     else:
         values = [0] * len(item_features)
     return torch.tensor(values, dtype=dtype)
+
+
+def _indexed_user_feature_tensor(user_features: pd.DataFrame, column: str, dtype: torch.dtype) -> torch.Tensor:
+    """Load a user feature column into a tensor indexed by model UserIndex."""
+    max_user_idx = int(user_features["UserIndex"].max())
+    values = torch.zeros(max_user_idx + 1, dtype=dtype)
+    if column in user_features:
+        user_indices = torch.tensor(user_features["UserIndex"].to_numpy(), dtype=torch.long)
+        column_values = user_features[column].fillna(0).to_numpy()
+        values[user_indices] = torch.tensor(column_values, dtype=dtype)
+    return values
+
+
+def _encode_user_for_api(model: TwoTowerModel, user_feature_tensors: dict[str, torch.Tensor], user_idx: int) -> torch.Tensor:
+    """Build a one-user feature batch and encode it for retrieval."""
+    index = torch.tensor([user_idx], dtype=torch.long)
+    def float_feature(key: str) -> torch.Tensor:
+        values = user_feature_tensors.get(key)
+        return values[index] if values is not None else torch.zeros(1, dtype=torch.float32)
+
+    def long_feature(key: str) -> torch.Tensor:
+        values = user_feature_tensors.get(key)
+        return values[index] if values is not None else torch.zeros(1, dtype=torch.long)
+
+    return model.encode_user(
+        index,
+        float_feature("user_norm_price"),
+        float_feature("user_norm_age"),
+        float_feature("user_fn"),
+        float_feature("user_active"),
+        long_feature("user_club_status"),
+        long_feature("user_fashion_frequency"),
+        long_feature("user_recent_category"),
+        long_feature("user_recent_color"),
+        long_feature("user_recent_product_group"),
+        long_feature("user_recent_section"),
+        long_feature("user_recent_garment_group"),
+        long_feature("user_recent_sales_channel"),
+        float_feature("user_norm_purchase_count"),
+        float_feature("user_norm_unique_item_count"),
+        float_feature("user_norm_avg_item_popularity"),
+    )
 
 
 @asynccontextmanager
@@ -207,15 +262,31 @@ async def lifespan(app: FastAPI):
 
     active_users = train_interactions["UserIndex"].value_counts()
     fallback_user_idx = int(active_users.index[0]) if not active_users.empty else 0
-    user_price_map = {
-        str(row.UserId): float(row.NormAvgPrice)
-        for row in user_features[["UserId", "NormAvgPrice"]].itertuples(index=False)
+    user_feature_tensors = {
+        "user_norm_price": _indexed_user_feature_tensor(user_features, "NormAvgPrice", torch.float32),
+        "user_norm_age": _indexed_user_feature_tensor(user_features, "NormAge", torch.float32),
+        "user_fn": _indexed_user_feature_tensor(user_features, "FNFlag", torch.float32),
+        "user_active": _indexed_user_feature_tensor(user_features, "ActiveFlag", torch.float32),
+        "user_club_status": _indexed_user_feature_tensor(user_features, "ClubStatusIdx", torch.long),
+        "user_fashion_frequency": _indexed_user_feature_tensor(user_features, "FashionFrequencyIdx", torch.long),
+        "user_recent_category": _indexed_user_feature_tensor(user_features, "RecentCategoryIdx", torch.long),
+        "user_recent_color": _indexed_user_feature_tensor(user_features, "RecentColorIdx", torch.long),
+        "user_recent_product_group": _indexed_user_feature_tensor(user_features, "RecentProductGroupIdx", torch.long),
+        "user_recent_section": _indexed_user_feature_tensor(user_features, "RecentSectionIdx", torch.long),
+        "user_recent_garment_group": _indexed_user_feature_tensor(user_features, "RecentGarmentGroupIdx", torch.long),
+        "user_recent_sales_channel": _indexed_user_feature_tensor(user_features, "RecentSalesChannelIdx", torch.long),
+        "user_norm_purchase_count": _indexed_user_feature_tensor(user_features, "NormPurchaseCount", torch.float32),
+        "user_norm_unique_item_count": _indexed_user_feature_tensor(
+            user_features,
+            "NormUniqueItemCount",
+            torch.float32,
+        ),
+        "user_norm_avg_item_popularity": _indexed_user_feature_tensor(
+            user_features,
+            "NormAvgItemPopularity",
+            torch.float32,
+        ),
     }
-    user_idx_to_price = {
-        int(row.UserIndex): float(row.NormAvgPrice)
-        for row in user_features[["UserIndex", "NormAvgPrice"]].itertuples(index=False)
-    }
-
     app_state.update(
         {
             "encoders": encoders,
@@ -227,8 +298,7 @@ async def lifespan(app: FastAPI):
             "item_original_ids": item_features["Id"].astype(int).to_numpy(),
             "storefront_mask": _load_storefront_filter(item_features),
             "seen_items": _build_seen_items(train_interactions),
-            "user_price_map": user_price_map,
-            "user_idx_to_price": user_idx_to_price,
+            "user_feature_tensors": user_feature_tensors,
             "fallback_user_idx": fallback_user_idx,
         }
     )
@@ -266,8 +336,7 @@ def recommend(
 
     model: TwoTowerModel = app_state["model"]
     user_le = app_state["user_le"]
-    user_price_map: dict[str, float] = app_state["user_price_map"]
-    user_idx_to_price: dict[int, float] = app_state["user_idx_to_price"]
+    user_feature_tensors: dict[str, torch.Tensor] = app_state["user_feature_tensors"]
     item_vectors: torch.Tensor = app_state["item_vectors"]
     item_popularity: torch.Tensor = app_state["item_popularity"]
     item_indices = app_state["item_indices"]
@@ -275,18 +344,13 @@ def recommend(
 
     try:
         user_idx = int(user_le.transform([user_id])[0])
-        norm_price = user_price_map.get(user_id, user_idx_to_price.get(user_idx, 0.0))
         cold_start = False
     except Exception:
         user_idx = int(app_state["fallback_user_idx"])
-        norm_price = user_idx_to_price.get(user_idx, 0.0)
         cold_start = True
 
     with torch.no_grad():
-        user_vector = model.encode_user(
-            torch.tensor([user_idx], dtype=torch.long),
-            torch.tensor([norm_price], dtype=torch.float32),
-        )
+        user_vector = _encode_user_for_api(model, user_feature_tensors, user_idx)
         scores = torch.matmul(user_vector, item_vectors.t()).squeeze(0)
 
     if storefront_only and app_state.get("storefront_mask") is not None:
