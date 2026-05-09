@@ -20,7 +20,7 @@ namespace Outfitly.Services
             int topK = 8,
             CancellationToken cancellationToken = default)
         {
-            var path = $"recommend/{Uri.EscapeDataString(userId)}?top_k={topK}&storefront_only=true&rerank=true&rerank_pool_size=200&popularity_weight=0.10";
+            var path = $"recommend/{Uri.EscapeDataString(userId)}?top_k={topK}&storefront_only=true&rerank=true&rerank_pool_size=3000&popularity_weight=0.80";
 
             try
             {

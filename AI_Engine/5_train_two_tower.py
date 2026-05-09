@@ -127,19 +127,19 @@ def parse_args() -> argparse.Namespace:
     """Read command-line options for model training."""
     parser = argparse.ArgumentParser(description="Train Outfitly two-tower model")
     parser.add_argument("--data-dir", default=str(DATA_DIR))
-    parser.add_argument("--epochs", type=int, default=8)
+    parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--max-interactions", type=int, default=0, help="0 means use all prepared interactions")
     parser.add_argument("--validation-ratio", type=float, default=0.05)
-    parser.add_argument("--min-user-interactions", type=int, default=1)
+    parser.add_argument("--min-user-interactions", type=int, default=2)
     parser.add_argument("--min-item-interactions", type=int, default=1)
     parser.add_argument(
         "--validation-strategy",
         choices=["user-holdout", "random"],
-        default="random",
-        help="Random validation worked better for the current sampled H&M data.",
+        default="user-holdout",
+        help="Hold out purchases from users that remain represented in training.",
     )
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--output", default=str(DATA_DIR / "two_tower_model.pth"))
@@ -151,6 +151,11 @@ def parse_args() -> argparse.Namespace:
         "--recall-ks",
         default="10,50,100",
         help="Comma-separated Recall@K values to calculate after each epoch. Use 0 to disable.",
+    )
+    parser.add_argument(
+        "--map-ks",
+        default="12",
+        help="Comma-separated MAP@K values to calculate after each epoch. Use 0 to disable.",
     )
     parser.add_argument(
         "--recall-batch-size",
@@ -166,13 +171,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--popularity-rerank-weight",
         type=float,
-        default=0.10,
+        default=0.80,
         help="Weight added to candidate scores from normalized item popularity during Recall@K reranking.",
     )
     parser.add_argument(
         "--rerank-candidate-pool",
         type=int,
-        default=200,
+        default=3000,
         help="Number of two-tower candidates to rerank with popularity before computing top K.",
     )
     parser.add_argument(
@@ -199,6 +204,17 @@ def parse_recall_ks(value: str | None, fallback_k: int) -> list[int]:
         return []
     recall_ks = sorted({int(part.strip()) for part in cleaned.split(",") if part.strip()})
     return [k for k in recall_ks if k > 0]
+
+
+def parse_metric_ks(value: str | None) -> list[int]:
+    """Convert a comma-separated K list like '12' into sorted integer values."""
+    if value is None:
+        return []
+    cleaned = value.strip().lower()
+    if cleaned in {"", "0", "none", "off", "false"}:
+        return []
+    metric_ks = sorted({int(part.strip()) for part in cleaned.split(",") if part.strip()})
+    return [k for k in metric_ks if k > 0]
 
 
 def move_batch(batch: dict[str, torch.Tensor], device: torch.device) -> dict[str, torch.Tensor]:
@@ -381,6 +397,11 @@ def format_recall_metrics(prefix: str, metrics: dict[int, float]) -> str:
     return " ".join(f"{prefix}@{k}={value:.4f}" for k, value in sorted(metrics.items()))
 
 
+def format_at_k_metrics(prefix: str, metrics: dict[int, float]) -> str:
+    """Format at-K metric values for readable training logs."""
+    return " ".join(f"{prefix}@{k}={value:.4f}" for k, value in sorted(metrics.items()))
+
+
 def metric_is_better(metric_name: str, value: float, best_value: float, min_delta: float) -> bool:
     """Return True when the current metric improves enough to save a new checkpoint."""
     if metric_name == "validation_loss":
@@ -398,6 +419,8 @@ def selected_metric_value(
     validation_loss: float,
     validation_recall: dict[int, float],
     storefront_recall: dict[int, float],
+    validation_map: dict[int, float],
+    storefront_map: dict[int, float],
 ) -> float:
     """Read the metric chosen for checkpoint selection from the current epoch results."""
     if metric_name == "validation_loss":
@@ -412,6 +435,10 @@ def selected_metric_value(
         return validation_recall.get(k, 0.0)
     if prefix == "storefront_recall":
         return storefront_recall.get(k, 0.0)
+    if prefix == "map":
+        return validation_map.get(k, 0.0)
+    if prefix == "storefront_map":
+        return storefront_map.get(k, 0.0)
     raise ValueError(f"Unsupported selection metric: {metric_name}")
 
 
@@ -508,10 +535,111 @@ def recall_at_ks(
     return {k: hit_counts[k] / max(total, 1) for k in ks}
 
 
+def build_validation_targets(
+    dataset: PositivePairDataset,
+    validation_indices: list[int],
+) -> dict[int, set[int]]:
+    """Group held-out validation items by user for MAP@K evaluation."""
+    targets: dict[int, set[int]] = {}
+    for index in validation_indices:
+        user_idx = int(dataset.user_idx[index])
+        item_idx = int(dataset.item_idx[index])
+        targets.setdefault(user_idx, set()).add(item_idx)
+    return targets
+
+
+@torch.no_grad()
+def map_at_ks(
+    model: TwoTowerModel,
+    dataset: PositivePairDataset,
+    validation_indices: list[int],
+    all_item_tensors: dict[str, torch.Tensor],
+    train_seen_items: dict[int, set[int]],
+    device: torch.device,
+    ks: list[int],
+    batch_size: int,
+    popularity_rerank_weight: float,
+    rerank_candidate_pool: int,
+) -> dict[int, float]:
+    """Measure mean average precision by user, using held-out items as relevant items."""
+    if not ks or not validation_indices or len(all_item_tensors["item_idx"]) == 0:
+        return {k: 0.0 for k in ks}
+
+    validation_targets = build_validation_targets(dataset, validation_indices)
+    if not validation_targets:
+        return {k: 0.0 for k in ks}
+
+    model.eval()
+    item_vectors = model.encode_item(
+        all_item_tensors["item_idx"],
+        all_item_tensors["item_cat"],
+        all_item_tensors["item_color"],
+        all_item_tensors["item_graphic"],
+        all_item_tensors["item_norm_price"],
+        all_item_tensors["item_product_group"],
+        all_item_tensors["item_section"],
+        all_item_tensors["item_garment_group"],
+        all_item_tensors["item_popularity"],
+    )
+    candidate_item_indices = all_item_tensors["item_idx"]
+    item_index_to_position = {
+        int(item_idx): position
+        for position, item_idx in enumerate(candidate_item_indices.detach().cpu().tolist())
+    }
+
+    user_indices = sorted(validation_targets)
+    precision_sums = {k: 0.0 for k in ks}
+    max_k = min(max(ks), len(candidate_item_indices))
+    evaluated_users = 0
+    for start in range(0, len(user_indices), batch_size):
+        batch_users = user_indices[start : start + batch_size]
+        user_idx_cpu = torch.tensor(batch_users, dtype=torch.long)
+        user_price_cpu = dataset.user_price[user_idx_cpu]
+
+        user_vectors = model.encode_user(user_idx_cpu.to(device), user_price_cpu.to(device))
+        scores = torch.matmul(user_vectors, item_vectors.t())
+
+        for row, user_idx in enumerate(batch_users):
+            relevant_items = validation_targets[user_idx]
+            seen_positions = [
+                item_index_to_position[item_idx]
+                for item_idx in train_seen_items.get(int(user_idx), set())
+                if item_idx not in relevant_items and item_idx in item_index_to_position
+            ]
+            if seen_positions:
+                scores[row, torch.tensor(seen_positions, dtype=torch.long, device=device)] = float("-inf")
+
+        if popularity_rerank_weight > 0:
+            pool_size = min(max(max_k, rerank_candidate_pool), len(candidate_item_indices))
+            pool_scores, pool_positions = torch.topk(scores, pool_size, dim=1)
+            popularity_scores = all_item_tensors["item_popularity"][pool_positions]
+            rerank_scores = pool_scores + popularity_rerank_weight * popularity_scores
+            rerank_order = torch.topk(rerank_scores, max_k, dim=1).indices
+            top_positions = pool_positions.gather(1, rerank_order)
+        else:
+            top_positions = torch.topk(scores, max_k, dim=1).indices
+
+        top_item_indices = candidate_item_indices[top_positions].detach().cpu().tolist()
+        for user_idx, recommended_items in zip(batch_users, top_item_indices):
+            relevant_items = validation_targets[user_idx]
+            evaluated_users += 1
+            for k in ks:
+                hits = 0
+                precision_sum = 0.0
+                for rank, item_idx in enumerate(recommended_items[: min(k, max_k)], start=1):
+                    if int(item_idx) in relevant_items:
+                        hits += 1
+                        precision_sum += hits / rank
+                precision_sums[k] += precision_sum / min(len(relevant_items), k)
+
+    return {k: precision_sums[k] / max(evaluated_users, 1) for k in ks}
+
+
 def main() -> None:
     """Load prepared CSV data, train the two-tower model, and save the best checkpoint."""
     args = parse_args()
     recall_ks = parse_recall_ks(args.recall_ks, args.recall_k)
+    map_ks = parse_metric_ks(args.map_ks)
     torch.manual_seed(args.seed)
     data_dir = Path(args.data_dir)
 
@@ -624,6 +752,8 @@ def main() -> None:
             )
         else:
             print("Storefront recall disabled because storefront_product_ids.csv was not found or empty.")
+    if map_ks:
+        print(f"MAP metrics enabled for K={map_ks}.")
     epochs_without_improvement = 0
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -674,13 +804,49 @@ def main() -> None:
             if recall_ks and storefront_item_tensors is not None and storefront_validation_indices
             else {}
         )
+        validation_map = (
+            map_at_ks(
+                model,
+                dataset,
+                validation_indices,
+                all_item_tensors,
+                train_seen_items,
+                device,
+                map_ks,
+                args.recall_batch_size,
+                args.popularity_rerank_weight,
+                args.rerank_candidate_pool,
+            )
+            if map_ks
+            else {}
+        )
+        storefront_map = (
+            map_at_ks(
+                model,
+                dataset,
+                storefront_validation_indices,
+                storefront_item_tensors,
+                train_seen_items,
+                device,
+                map_ks,
+                args.recall_batch_size,
+                args.popularity_rerank_weight,
+                args.rerank_candidate_pool,
+            )
+            if map_ks and storefront_item_tensors is not None and storefront_validation_indices
+            else {}
+        )
         recall_text = format_recall_metrics("recall", validation_recall)
         storefront_recall_text = format_recall_metrics("storefront_recall", storefront_recall)
+        map_text = format_at_k_metrics("map", validation_map)
+        storefront_map_text = format_at_k_metrics("storefront_map", storefront_map)
         print(
             f"Epoch {epoch} complete train_loss={train_loss:.4f} "
             f"validation_loss={validation_loss:.4f}"
             f"{(' ' + recall_text) if recall_text else ''}"
             f"{(' ' + storefront_recall_text) if storefront_recall_text else ''}"
+            f"{(' ' + map_text) if map_text else ''}"
+            f"{(' ' + storefront_map_text) if storefront_map_text else ''}"
         )
 
         current_metric_value = selected_metric_value(
@@ -688,6 +854,8 @@ def main() -> None:
             validation_loss,
             validation_recall,
             storefront_recall,
+            validation_map,
+            storefront_map,
         )
 
         if metric_is_better(args.selection_metric, current_metric_value, best_metric_value, args.min_delta):
@@ -708,6 +876,8 @@ def main() -> None:
             checkpoint["metrics"].update(
                 {f"storefront_recall@{k}": value for k, value in storefront_recall.items()}
             )
+            checkpoint["metrics"].update({f"map@{k}": value for k, value in validation_map.items()})
+            checkpoint["metrics"].update({f"storefront_map@{k}": value for k, value in storefront_map.items()})
             torch.save(checkpoint, output_path)
             archive_path = archive_checkpoint(
                 output_path,

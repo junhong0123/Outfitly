@@ -257,8 +257,8 @@ def recommend(
     exclude_seen: bool = True,
     storefront_only: bool = True,
     rerank: bool = True,
-    rerank_pool_size: int = Query(200, ge=1, le=1000),
-    popularity_weight: float = Query(0.10, ge=0.0, le=1.0),
+    rerank_pool_size: int = Query(3000, ge=1, le=3000),
+    popularity_weight: float = Query(0.80, ge=0.0, le=1.0),
 ):
     """Return top product recommendations with optional popularity reranking."""
     if not app_state:
