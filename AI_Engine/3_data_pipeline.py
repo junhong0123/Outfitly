@@ -197,7 +197,7 @@ def prepare_training_artifacts(
     user_price_scaler = MinMaxScaler()
     user_agg["NormAvgPrice"] = user_price_scaler.fit_transform(user_agg[["AvgPurchasePrice"]].fillna(0))
 
-    train_data = transaction_view[["customer_id", "article_id", "t_dat", "sales_channel_id"]].rename(
+    train_data = transaction_view[["customer_id", "article_id", "t_dat", "price", "sales_channel_id"]].rename(
         columns={"customer_id": "UserId", "article_id": "ProductId"}
     )
     train_data["UserId"] = train_data["UserId"].astype("string")
@@ -205,9 +205,10 @@ def prepare_training_artifacts(
     train_data["UserIndex"] = user_le.transform(train_data["UserId"])
     train_data["ItemIndex"] = item_le.transform(train_data["ProductId"])
     train_data["TDat"] = pd.to_datetime(train_data["t_dat"]).dt.strftime("%Y-%m-%d")
+    train_data["Price"] = train_data["price"].astype(float)
     train_data["SalesChannelId"] = train_data["sales_channel_id"].astype(int)
     train_data = train_data.sort_values("TDat").drop_duplicates(["UserIndex", "ItemIndex"], keep="last")
-    train_data = train_data[["UserIndex", "ItemIndex", "TDat", "SalesChannelId"]]
+    train_data = train_data[["UserIndex", "ItemIndex", "TDat", "Price", "SalesChannelId"]]
 
     item_source[
         [

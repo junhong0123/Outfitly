@@ -213,13 +213,14 @@ def main() -> None:
         args.min_item_interactions,
     )
 
-    dataset = train.PositivePairDataset(interactions, user_features, item_features)
     train_indices, validation_indices = train.make_train_validation_indices(
         interactions,
         args.validation_ratio,
         args.seed,
         args.validation_strategy,
     )
+    user_features = train.build_training_user_features(user_features, interactions, train_indices, item_features)
+    dataset = train.PositivePairDataset(interactions, user_features, item_features)
     if args.max_metric_validation_pairs > 0 and len(validation_indices) > args.max_metric_validation_pairs:
         rng = np.random.default_rng(args.seed)
         validation_indices = sorted(

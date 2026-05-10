@@ -285,6 +285,106 @@ def optional_feature_count(item_features: pd.DataFrame, column: str) -> int | No
     return int(item_features[column].max()) + 1
 
 
+def scale_series(values: pd.Series) -> pd.Series:
+    """Min-max scale a numeric series, returning zeros for constant input."""
+    values = values.astype(float).fillna(0)
+    minimum = float(values.min()) if len(values) else 0.0
+    maximum = float(values.max()) if len(values) else 0.0
+    if maximum <= minimum:
+        return pd.Series(0.0, index=values.index)
+    return (values - minimum) / (maximum - minimum)
+
+
+def build_training_user_features(
+    user_features: pd.DataFrame,
+    interactions: pd.DataFrame,
+    train_indices: list[int],
+    item_features: pd.DataFrame,
+) -> pd.DataFrame:
+    """Recompute history-derived user features from train rows only to avoid validation leakage."""
+    features = user_features.copy()
+    user_index = features["UserIndex"].astype(int)
+
+    dynamic_float_columns = [
+        "NormAvgPrice",
+        "NormPurchaseCount",
+        "NormUniqueItemCount",
+        "NormAvgItemPopularity",
+    ]
+    dynamic_long_columns = [
+        "RecentCategoryIdx",
+        "RecentColorIdx",
+        "RecentProductGroupIdx",
+        "RecentSectionIdx",
+        "RecentGarmentGroupIdx",
+        "RecentSalesChannelIdx",
+    ]
+    for column in dynamic_float_columns:
+        if column in features:
+            features[column] = 0.0
+    for column in dynamic_long_columns:
+        if column in features:
+            features[column] = 0
+
+    if not train_indices:
+        return features
+
+    history = interactions.iloc[train_indices].copy()
+    if history.empty:
+        return features
+
+    history["UserIndex"] = history["UserIndex"].astype(int)
+    history["ItemIndex"] = history["ItemIndex"].astype(int)
+    user_to_row = pd.Series(features.index.to_numpy(), index=user_index)
+
+    if "Price" in history and "NormAvgPrice" in features:
+        avg_price = history.groupby("UserIndex", sort=False)["Price"].mean()
+        scaled_price = scale_series(avg_price)
+        rows = avg_price.index.map(user_to_row).dropna().astype(int)
+        features.loc[rows, "NormAvgPrice"] = scaled_price.loc[avg_price.index].to_numpy()
+
+    purchase_count = history.groupby("UserIndex", sort=False).size()
+    if "NormPurchaseCount" in features:
+        scaled_count = scale_series(np.log1p(purchase_count))
+        rows = purchase_count.index.map(user_to_row).dropna().astype(int)
+        features.loc[rows, "NormPurchaseCount"] = scaled_count.loc[purchase_count.index].to_numpy()
+
+    unique_count = history.groupby("UserIndex", sort=False)["ItemIndex"].nunique()
+    if "NormUniqueItemCount" in features:
+        scaled_unique_count = scale_series(np.log1p(unique_count))
+        rows = unique_count.index.map(user_to_row).dropna().astype(int)
+        features.loc[rows, "NormUniqueItemCount"] = scaled_unique_count.loc[unique_count.index].to_numpy()
+
+    item_lookup = item_features.set_index("ItemIndex")
+    if "NormAvgItemPopularity" in features and "NormPopularity" in item_lookup:
+        popularity = history["ItemIndex"].map(item_lookup["NormPopularity"]).fillna(0)
+        avg_popularity = popularity.groupby(history["UserIndex"], sort=False).mean()
+        scaled_popularity = scale_series(avg_popularity)
+        rows = avg_popularity.index.map(user_to_row).dropna().astype(int)
+        features.loc[rows, "NormAvgItemPopularity"] = scaled_popularity.loc[avg_popularity.index].to_numpy()
+
+    if "TDat" in history:
+        history["_TDat"] = pd.to_datetime(history["TDat"])
+        latest = history.sort_values(["_TDat", "UserIndex"]).drop_duplicates("UserIndex", keep="last")
+        latest_users = latest["UserIndex"].astype(int)
+        rows = latest_users.map(user_to_row).dropna().astype(int)
+        recent_mappings = {
+            "RecentCategoryIdx": "CategoryIdx",
+            "RecentColorIdx": "ColorIdx",
+            "RecentProductGroupIdx": "ProductGroupIdx",
+            "RecentSectionIdx": "SectionIdx",
+            "RecentGarmentGroupIdx": "GarmentGroupIdx",
+        }
+        for user_column, item_column in recent_mappings.items():
+            if user_column in features and item_column in item_lookup:
+                values = latest["ItemIndex"].map(item_lookup[item_column]).fillna(0).astype(int).to_numpy()
+                features.loc[rows, user_column] = values
+        if "RecentSalesChannelIdx" in features and "SalesChannelId" in latest:
+            features.loc[rows, "RecentSalesChannelIdx"] = latest["SalesChannelId"].fillna(0).astype(int).to_numpy()
+
+    return features
+
+
 def filter_interactions_by_activity(
     interactions: pd.DataFrame,
     min_user_interactions: int,
@@ -832,14 +932,14 @@ def main() -> None:
     if len(interactions) < 2:
         raise RuntimeError("Not enough interactions remain after filtering.")
 
-    dataset = PositivePairDataset(interactions, user_features, item_features)
-
     train_indices, validation_indices = make_train_validation_indices(
         interactions,
         args.validation_ratio,
         args.seed,
         args.validation_strategy,
     )
+    user_features = build_training_user_features(user_features, interactions, train_indices, item_features)
+    dataset = PositivePairDataset(interactions, user_features, item_features)
     rng = np.random.default_rng(args.seed)
     loss_validation_indices = validation_indices
     if args.max_validation_loss_pairs > 0 and len(loss_validation_indices) > args.max_validation_loss_pairs:
